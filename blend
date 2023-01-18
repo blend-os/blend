@@ -5,7 +5,7 @@ import shutil
 import argparse
 import subprocess
 
-__version = '1.0.0'
+__version = '1.0.1'
 
 ### Colors
 class colors:
@@ -421,6 +421,13 @@ Here's a list of the supported distros:
 
 You can use any of these distros by passing the option {colors.bold}--distro=[NAME OF THE DISTRO]{colors.reset}.
 
+You can even install a supported desktop environment in a blend container (run `blend install-de [DESKTOP ENVIRONMENT NAME]` to install your favorite desktop environment).
+
+Here's a list of the supported desktop environments:
+{colors.bold}1.{colors.reset} gnome
+{colors.bold}2.{colors.reset} mate
+(support for many more DEs is coming soon)
+
 {colors.bold}{colors.fg.lightblue}arch{colors.reset} also supports AUR packages, for an extremely large app catalog.
 
 {colors.bold}{colors.fg.purple}available commands{colors.reset}:
@@ -428,6 +435,7 @@ You can use any of these distros by passing the option {colors.bold}--distro=[NA
   {colors.bold}version{colors.reset}               Show version information and exit.
   {colors.bold}enter{colors.reset}                 Enter the container shell.
   {colors.bold}install{colors.reset}               Install packages inside a container.
+  {colors.bold}install-de{colors.reset}            Install a desktop environment inside a container.
   {colors.bold}remove{colors.reset}                Remove packages inside a managed container.
   {colors.bold}create-container{colors.reset}      Create a container managed by blend.
   {colors.bold}remove-container{colors.reset}      Remove a container managed by blend.

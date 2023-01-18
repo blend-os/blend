@@ -1,0 +1,4 @@
+/debian/*.debhelper
+/debian/*.substvars
+/debian/debhelper-build-stamp
+/debian/blend

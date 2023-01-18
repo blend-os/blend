@@ -1,0 +1,498 @@
+#!/usr/bin/env python3
+
+import os, sys
+import shutil
+import argparse
+import subprocess
+
+__version = '1.0.0'
+
+### Colors
+class colors:
+    reset = '\033[0m'
+    bold = '\033[01m'
+    disable = '\033[02m'
+    underline = '\033[04m'
+    reverse = '\033[07m'
+    strikethrough = '\033[09m'
+    invisible = '\033[08m'
+
+    class fg:
+        black = '\033[30m'
+        red = '\033[31m'
+        green = '\033[32m'
+        orange = '\033[33m'
+        blue = '\033[34m'
+        purple = '\033[35m'
+        cyan = '\033[36m'
+        lightgrey = '\033[37m'
+        darkgrey = '\033[90m'
+        lightred = '\033[91m'
+        lightgreen = '\033[92m'
+        yellow = '\033[93m'
+        lightblue = '\033[94m'
+        pink = '\033[95m'
+        lightcyan = '\033[96m'
+
+    class bg:
+        black = '\033[40m'
+        red = '\033[41m'
+        green = '\033[42m'
+        orange = '\033[43m'
+        blue = '\033[44m'
+        purple = '\033[45m'
+        cyan = '\033[46m'
+        lightgrey = '\033[47m'
+
+### END
+
+### Helper functions
+
+def info(msg):
+    print (colors.bold + colors.fg.cyan + '>> i: ' + colors.reset + colors.bold + msg + colors.reset)
+
+def error(err):
+    print (colors.bold + colors.fg.red + '>> e: ' + colors.reset + colors.bold + err + colors.reset)
+
+### END
+
+distro_map = {
+    'arch': 'docker.io/library/archlinux',
+    'fedora-rawhide': 'fedora:rawhide',
+    'ubuntu-22.04': 'ubuntu:22.04',
+    'ubuntu-22.10': 'ubuntu:22.10'
+}
+
+default_distro = 'arch'
+
+def get_distro():
+    try:
+        return distro_map[args.distro]
+    except:
+        error(f"{args.distro} isn't supported by blend.")
+        exit()
+
+def distrobox_list_containers():
+    _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
+        '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    if len(_list) == 0:
+        info('No containers. Create one by installing a package (`blend install hello`), or manually create one (`blend create-container arch`).')
+    for container in _list.splitlines(keepends=False):
+        if 'distrobox' in container.split(':')[1]:
+            print(container.split(':')[0])
+    return False
+
+def distrobox_check_container(name):
+    _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
+        '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    for container in _list.splitlines(keepends=False):
+        if 'distrobox' in container.split(':')[1] and name.strip() == container.split(':')[0]:
+                return True
+    return False
+
+def distrobox_create_container():
+    name = args.container_name
+    distro = args.distro
+    info(f'creating container {name}, using {distro}')
+    if subprocess.run(['distrobox-create', '-Y', '-n', name, '-i', get_distro()], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+        if distrobox_check_container(name):
+            error(f'container {name} already exists')
+            exit(1)
+        error(f'failed to create container {name}')
+        exit(1)
+    subprocess.call(['distrobox-enter', '-nw', '-n', args.container_name, '--', 'echo -n'])
+    if distro == 'arch':
+        distrobox_run_container('sudo pacman -Sy')
+        distrobox_run_container('sudo pacman --noconfirm -S --needed git base-devel')
+        distrobox_run_container('cd ~; git clone https://aur.archlinux.org/yay.git')
+        distrobox_run_container('cd ~/yay; makepkg --noconfirm -si')
+
+distrobox_get_output = lambda cmd: subprocess.run(['distrobox-enter', '-nw', '-n', args.container_name, '--', cmd],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
+
+def distrobox_run_container(cmd):
+    subprocess.call(['podman', 'exec', '-u', os.environ['USER'], '-it', args.container_name, 'sh', '-c', cmd])
+
+def distrobox_install_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo dnf -y install {pkg}')
+        else:
+            distrobox_run_container(f'sudo dnf install {pkg}')
+    elif args.distro == 'arch':
+        if distrobox_get_output('yay --version') == '':
+            distrobox_run_container('sudo pacman -Sy')
+            distrobox_run_container('sudo pacman --noconfirm -S --needed git base-devel')
+            distrobox_run_container('git clone https://aur.archlinux.org/yay.git')
+            distrobox_run_container('cd yay; makepkg --noconfirm -si')
+        distrobox_run_container(f'yay -Sy')
+        if args.noconfirm == True:
+            distrobox_run_container(f'yay --noconfirm -S {pkg}')
+        else:
+            distrobox_run_container(f'yay -S {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        distrobox_run_container(f'sudo apt-get update')
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo apt-get install -y {pkg}')
+        else:
+            distrobox_run_container(f'sudo apt-get install {pkg}')
+
+def distrobox_remove_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo dnf -y remove {pkg}')
+        else:
+            distrobox_run_container(f'sudo dnf remove {pkg}')
+    elif args.distro == 'arch':
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo pacman --noconfirm -Rcns {pkg}')
+        else:
+            distrobox_run_container(f'sudo pacman -Rcns {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo apt-get purge -y {pkg}')
+        else:
+            distrobox_run_container(f'sudo apt-get purge {pkg}')
+        distrobox_run_container(f'sudo apt-get autoremove --purge -y {pkg}')
+
+def distrobox_search_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        distrobox_run_container(f'dnf search {pkg}')
+    elif args.distro == 'arch':
+        distrobox_run_container(f'yay -Sy')
+        distrobox_run_container(f'yay {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        distrobox_run_container(f'sudo apt-get update')
+        distrobox_run_container(f'apt-cache search {pkg}')
+
+def distrobox_show_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        distrobox_run_container(f'dnf info {pkg}')
+    elif args.distro == 'arch':
+        distrobox_run_container(f'yay -Sy')
+        distrobox_run_container(f'yay -Si {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        distrobox_run_container(f'sudo apt-get update')
+        distrobox_run_container(f'apt-cache show {pkg}')
+
+def install_de():
+    if len(args.pkg) == 0:
+        error('you need to specify a desktop environment (gnome and mate are supported)')
+        exit()
+    name = args.pkg[0]
+    if name == 'mate' or name == 'gnome':
+        if distro_input == None and cn_input == None:
+            info(f'using fedora-rawhide instead of {default_distro}, as it\'s recommended for {name}')
+            info('if you want to use arch, you can specify `--distro arch`')
+            args.distro = 'fedora-rawhide'
+            args.container_name = 'fedora-rawhide'
+    else:
+        error(f'desktop environment {name} is not supported')
+        info('gnome and mate are supported')
+        exit()
+    if not distrobox_check_container(args.container_name):
+        distrobox_create_container()
+    info(f'installing {name} on {args.container_name} (using {args.distro})')
+    print()
+    info('ignore any errors after this')
+    distrobox_run_container('sudo umount /run/systemd/system')
+    distrobox_run_container('sudo rmdir /run/systemd/system')
+    distrobox_run_container('sudo ln -s /run/host/run/systemd/system /run/systemd &> /dev/null')
+    distrobox_run_container('sudo ln -s /run/host/run/dbus/system_bus_socket /run/dbus/ &> /dev/null')
+    distrobox_run_container('sudo mkdir -p /usr/local/bin')
+    distrobox_run_container('echo "#!/usr/bin/env bash" | sudo tee /usr/local/bin/disable_dbusactivatable_blend')
+    distrobox_run_container('echo "if [[ \$DISABLE_REPEAT -ne 1 ]]; then" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
+    distrobox_run_container('''echo 'while true; do for dir in ${XDG_DATA_DIRS//:/ }; do sudo find $dir/applications -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done; sleep 5; done' | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend''')
+    distrobox_run_container('echo "else" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
+    distrobox_run_container('''echo 'for dir in ${XDG_DATA_DIRS//:/ }; do sudo find $dir/applications -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done' | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend''')
+    distrobox_run_container('echo "fi" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
+    distrobox_run_container('sudo chmod 755 /usr/local/bin/disable_dbusactivatable_blend')
+    distrobox_run_container('sudo mkdir -p /etc/xdg/autostart')
+    distrobox_run_container('echo "[Desktop Entry]" | sudo tee /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    distrobox_run_container('echo "Version=1.0" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    distrobox_run_container('echo "Name=Remove DBusActivatable (blend)" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    distrobox_run_container('echo "Comment=Remove DBusActivatable in all desktop files" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    distrobox_run_container('echo "Exec=disable_dbusactivatable_blend" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    distrobox_run_container('echo "Type=Application" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    distrobox_run_container('sudo chmod 755 /usr/share/applications/disable_dbusactivatable_blend.desktop')
+    if name == 'mate':
+        if args.distro == 'fedora-rawhide':
+            if args.noconfirm == True:
+                distrobox_run_container(f'sudo dnf --allowerasing -y groupinstall MATE')
+            else:
+                distrobox_run_container(f'sudo dnf --allowerasing groupinstall MATE')
+        elif args.distro == 'arch':
+            if args.noconfirm == True:
+                distrobox_run_container(f'sudo pacman --noconfirm -S mate mate-extra')
+            else:
+                distrobox_run_container(f'sudo pacman -S mate mate-extra')
+        elif args.distro.startswith('ubuntu-'):
+            distrobox_run_container(f'sudo apt-get update')
+            if args.noconfirm == True:
+                distrobox_run_container(f'sudo apt-get install -y ubuntu-mate-desktop')
+            else:
+                distrobox_run_container(f'sudo apt-get install ubuntu-mate-desktop')
+        subprocess.run('sudo mkdir -p /usr/local/bin', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "export GTK_MODULES=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "export GTK3_MODULES=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "export LD_PRELOAD=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "chown -f -R $USER:$USER /tmp/.X11-unix" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "distrobox-enter {args.container_name} -- mate-session" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'sudo chmod 755 /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Version=1.0" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Name=MATE ({args.container_name})" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Comment=Use this session to run MATE as your desktop environment" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Exec={args.container_name}-mate-blend" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'sudo chmod 755 /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+    elif name == 'gnome':
+        if args.distro == 'fedora-rawhide':
+            if args.noconfirm == True:
+                distrobox_run_container(f'sudo dnf --allowerasing -y groupinstall GNOME')
+                distrobox_run_container(f'sudo dnf --allowerasing -y remove gnome-terminal')
+                distrobox_run_container(f'sudo dnf --allowerasing -y install gnome-console')
+            else:
+                distrobox_run_container(f'sudo dnf --allowerasing groupinstall GNOME')
+                distrobox_run_container(f'sudo dnf --allowerasing -y remove gnome-terminal')
+                distrobox_run_container(f'sudo dnf --allowerasing -y install gnome-console')
+        elif args.distro == 'arch':
+            if args.noconfirm == True:
+                distrobox_run_container(f'sudo pacman --noconfirm -S gnome gnome-console')
+                distrobox_run_container(f'sudo pacman --noconfirm -Rcns gnome-terminal')
+            else:
+                distrobox_run_container(f'sudo pacman -S gnome gnome-console')
+                distrobox_run_container(f'sudo pacman --noconfirm -Rcns gnome-terminal')
+        elif args.distro.startswith('ubuntu-'):
+            distrobox_run_container(f'sudo apt-get update')
+            if args.noconfirm == True:
+                distrobox_run_container(f'sudo apt-get install -y ubuntu-desktop gnome-console')
+                distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
+                distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
+            else:
+                distrobox_run_container(f'sudo apt-get install ubuntu-desktop gnome-console')
+                distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
+                distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
+        subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Name=GNOME on Wayland ({args.container_name})" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'sudo chmod 755 /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+
+def copy_desktop_files(pkg):
+    distrobox_run_container('sudo mkdir -p /usr/share/applications')
+    desktop_files = distrobox_get_output("find /usr/share/applications -type f -printf '%f\\n'").split('\r\n')
+    desktop_files[:] = [f.removesuffix('.desktop') for f in desktop_files if '.desktop' in f]
+    for f in desktop_files:
+        distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {f}')
+
+def install_blend():
+    if len(args.pkg) != 0:
+        info('installed binaries can be executed from each container\'s respective terminal')
+        print()
+
+    if len(args.pkg) == 0:
+        error('no packages to install')
+
+    for pkg in args.pkg:
+        info(f'installing blend {pkg}')
+        if not distrobox_check_container(args.container_name):
+            distrobox_create_container()
+        distrobox_install_pkg(pkg)
+        copy_desktop_files(pkg)
+
+def remove_blend():
+    if len(args.pkg) == 0:
+        error('no packages to remove')
+
+    for pkg in args.pkg:
+        info(f'removing blend {pkg}')
+        if not distrobox_check_container(args.container_name):
+            error(f"container {args.container_name} doesn't exist")
+        distrobox_remove_pkg(pkg)
+        subprocess.run(f'rm -f ~/.local/share/applications/{args.container_name}-*{pkg}*.desktop', shell=True)
+
+def search_blend():
+    if len(args.pkg) == 0:
+        error('no packages to search for')
+
+    for pkg in args.pkg:
+        if not distrobox_check_container(args.container_name):
+            error(f"container {args.container_name} doesn't exist")
+        distrobox_search_pkg(pkg)
+
+def show_blend():
+    if len(args.pkg) == 0:
+        error('no packages to show')
+
+    for pkg in args.pkg:
+        info(f'info about blend {pkg}')
+        if not distrobox_check_container(args.container_name):
+            error(f"container {args.container_name} doesn't exist")
+        distrobox_show_pkg(pkg)
+
+def sync_blends():
+    if args.distro == 'fedora-rawhide':
+        distrobox_run_container(f'dnf makecache')
+    elif args.distro == 'arch':
+        distrobox_run_container(f'yay -Syy')
+    elif args.distro.startswith('ubuntu-'):
+        distrobox_run_container(f'sudo apt-get update')
+
+def update_blends():
+    if args.distro == 'fedora-rawhide':
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo dnf -y upgrade')
+        else:
+            distrobox_run_container(f'sudo dnf upgrade')
+    elif args.distro == 'arch':
+        if args.noconfirm == True:
+            distrobox_run_container(f'yay --noconfirm')
+        else:
+            distrobox_run_container(f'yay')
+    elif args.distro.startswith('ubuntu-'):
+        distrobox_run_container(f'sudo apt-get update')
+        if args.noconfirm == True:
+            distrobox_run_container(f'sudo apt-get dist-upgrade -y')
+        else:
+            distrobox_run_container(f'sudo apt-get dist-upgrade')
+    else:
+        error(f'distribution {args.distro} is not supported')
+
+def enter_container():
+    if len(args.pkg) == 0:
+        error(f'you need to specify a container (run `blend list-container` to list all the containers)')
+        exit()
+    container = args.pkg[0]
+    info(f'entering container {container}')
+    args.container_name = container
+    subprocess.call(['distrobox-enter', '-n', args.container_name])
+
+def create_container():
+    for container in args.pkg:
+        args.container_name = container
+        distrobox_create_container()
+        subprocess.call(['distrobox-enter', '-nw', '-n', args.container_name, '--', 'echo -n'])
+
+def remove_container():
+    for container in args.pkg:
+        info(f'removing container {container}')
+        subprocess.run(['podman', 'stop', container], stdout=subprocess.DEVNULL)
+        subprocess.run(['distrobox-rm', container, '--force'], stdout=subprocess.DEVNULL)
+
+def start_containers():
+    _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
+        '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    if len(_list) == 0:
+        info('No containers. Create one by installing a package (`blend install hello`), or manually create one (`blend create-container arch`).')
+    for container in _list.splitlines(keepends=False):
+        container = container.split(':')[0]
+        info(f'starting container {container}')
+        subprocess.call(['distrobox-enter', '-n', args.container_name, '--', 'true'])
+
+if shutil.which('distrobox') is None:
+    error("distrobox isn't installed, which is a hard dep")
+    exit(1)
+
+if os.geteuid() == 0:
+    error("do not run as root")
+    exit(1)
+
+description = f'''
+{colors.bold}{colors.fg.purple}Usage:{colors.reset}
+  blend [command] [options] [arguments]
+
+{colors.bold}{colors.fg.purple}Version:{colors.reset} {__version}{colors.bold}
+
+{colors.bold}{colors.bg.purple}blend{colors.reset}{colors.bold} is a package manager for {colors.bg.purple}blendOS{colors.reset}{colors.bold}, which includes support for Arch, Ubuntu and Fedora packages.{colors.reset}
+
+{colors.bold}{colors.fg.purple}default distro{colors.reset}: {colors.bold}{colors.fg.lightblue}arch{colors.reset} (default container's name is the same as that of the default distro)
+
+Here's a list of the supported distros:
+{colors.bold}1.{colors.reset} arch
+{colors.bold}2.{colors.reset} fedora-rawhide
+{colors.bold}3.{colors.reset} ubuntu-22.04
+{colors.bold}4.{colors.reset} ubuntu-22.10
+(debian support is coming soon)
+
+You can use any of these distros by passing the option {colors.bold}--distro=[NAME OF THE DISTRO]{colors.reset}.
+
+{colors.bold}{colors.fg.lightblue}arch{colors.reset} also supports AUR packages, for an extremely large app catalog.
+
+{colors.bold}{colors.fg.purple}available commands{colors.reset}:
+  {colors.bold}help{colors.reset}                  Show this help message and exit.
+  {colors.bold}version{colors.reset}               Show version information and exit.
+  {colors.bold}enter{colors.reset}                 Enter the container shell.
+  {colors.bold}install{colors.reset}               Install packages inside a container.
+  {colors.bold}remove{colors.reset}                Remove packages inside a managed container.
+  {colors.bold}create-container{colors.reset}      Create a container managed by blend.
+  {colors.bold}remove-container{colors.reset}      Remove a container managed by blend.
+  {colors.bold}list-containers{colors.reset}       List all the containers managed by blend.
+  {colors.bold}start-containers{colors.reset}      Start all the container managed by blend.
+  {colors.bold}sync{colors.reset}                  Sync list of available packages from repository.
+  {colors.bold}search{colors.reset}                Search for packages in a managed container.
+  {colors.bold}show{colors.reset}                  Show details about a package.
+  {colors.bold}update{colors.reset}                Update all the packages in a managed container.
+
+{colors.bold}{colors.fg.purple}options for commands{colors.reset}:
+  {colors.bold}-cn CONTAINER NAME, --container-name CONTAINER NAME{colors.reset}
+                        set the container name (the default is the name of the distro)
+  {colors.bold}-d DISTRO, --distro DISTRO{colors.reset}
+                        set the distro name (supported: arch fedora-rawhide ubuntu-22.04 ubuntu-22.10; default is arch)
+  {colors.bold}-y, --noconfirm{colors.reset}       assume yes for all questions
+  {colors.bold}-v, --version{colors.reset}         show version information and exit
+'''
+
+epilog = f'''
+{colors.bold}Made with {colors.fg.red}\u2764{colors.reset}{colors.bold} by Rudra Saraswat.{colors.reset}
+'''
+
+parser = argparse.ArgumentParser(description=description, usage=argparse.SUPPRESS,
+                                 epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
+command_map = { 'install': install_blend,
+                'remove': remove_blend,
+                'install-de': install_de,
+                'enter': enter_container,
+                'create-container': create_container,
+                'remove-container': remove_container,
+                'list-containers': distrobox_list_containers,
+                'start-containers': start_containers,
+                'sync': sync_blends,
+                'update': update_blends,
+                'search': search_blend,
+                'show': show_blend,
+                'help': 'help',
+                'version': 'version' }
+parser.add_argument('command', choices=command_map.keys(), help=argparse.SUPPRESS)
+parser.add_argument('pkg', action='store', type=str, nargs='*', help=argparse.SUPPRESS)
+parser.add_argument('-cn', '--container-name', action='store', nargs=1, metavar='CONTAINER NAME', help=argparse.SUPPRESS)
+parser.add_argument('-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
+parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
+
+if len(sys.argv) == 1:
+    parser.print_help()
+    exit()
+
+args = parser.parse_intermixed_args()
+
+distro_input = args.distro
+args.distro = default_distro if args.distro == None else args.distro[0]
+cn_input = args.container_name
+args.container_name = args.distro if args.container_name == None else args.container_name[0]
+
+if args.container_name in distro_map and not args.distro == args.container_name and distro_input == None:
+    args.distro = args.container_name
+    info(f'assuming you meant to use {args.distro} as the distro')
+
+command = command_map[args.command]
+if command == 'help':
+    parser.print_help()
+elif command == 'version':
+    parser.parse_args(['--version'])
+else:
+    command()

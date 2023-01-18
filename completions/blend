@@ -1,0 +1,16 @@
+#/usr/bin/env bash
+
+set +e
+
+_completions() {
+    SUGGESTIONS=()
+
+    if [[ "$COMP_CWORD" == 1 ]]; then
+        SUGGESTIONS=('install' 'remove' 'update' 'show' 'search' 'enter' 'create-container' 'remove-container' \
+          'list-container' 'start-containers' 'sync' 'help' 'version' )
+    fi
+
+    COMPREPLY=($(compgen -W "${SUGGESTIONS[*]}" "${COMP_WORDS[$COMP_CWORD]}"))
+}
+
+complete -F _completions -- blend

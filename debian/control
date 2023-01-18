@@ -1,0 +1,22 @@
+Source: blend
+Section: devel
+Priority: optional
+Maintainer: Rudra Saraswat <rs2009@ubuntu.com>
+Build-Depends: debhelper (>= 9),
+Standards-Version: 3.9.6
+Homepage: https://github.com/blend-os/blend
+Vcs-Browser: https://github.com/blend-os/blend
+Vcs-Git: git://github.com/blend-os/blend.git
+
+Package: blend
+Architecture: all
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         distrobox,
+         podman,
+         python3
+Breaks: mrtrix3
+Built-Using: ${misc:Built-Using}
+Description: Package manager for blendOS.
+ This package contains the package manger for
+ blendOS.

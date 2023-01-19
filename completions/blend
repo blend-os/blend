@@ -11,7 +11,7 @@ _completions() {
           '--container-name=' '--distro=' '--noconfirm' '--version')
     fi
 
-    COMPREPLY=($(compgen -W "${SUGGESTIONS[*]}" "${COMP_WORDS[$COMP_CWORD]}"))
+    COMPREPLY=($(compgen -W "${SUGGESTIONS[*]}" -- "${COMP_WORDS[$COMP_CWORD]}"))
 }
 
 complete -F _completions -- blend

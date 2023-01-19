@@ -5,7 +5,7 @@ import shutil
 import argparse
 import subprocess
 
-__version = '1.0.3'
+__version = '1.0.4'
 
 ### Colors
 class colors:
@@ -299,7 +299,7 @@ def copy_desktop_files(pkg):
     distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {pkg} &>/dev/null')
 
 def del_desktop_files(pkg):
-    distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {pkg} --delete &>/dev/null')
+    subprocess.call(['distrobox-enter', '-n', args.container_name, '-e', f'sh -c "CONTAINER_ID={args.container_name} distrobox-export --app {pkg} --delete &>/dev/null"'])
 
 def export_blend():
     for pkg in args.pkg:

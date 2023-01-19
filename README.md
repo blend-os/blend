@@ -15,7 +15,7 @@ This was originally developed by VanillaOS.
 Usage:
   blend [command] [options] [arguments]
 
-Version: 1.0.3
+Version: 1.0.4
 
 blend is a package manager for blendOS, which includes support for Arch, Ubuntu and Fedora packages.
 

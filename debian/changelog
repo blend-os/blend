@@ -1,3 +1,9 @@
+blend (1.0.4) lunar; urgency=emergency
+
+  * Sync with blend 1.0.4, which fixes a major bug relating to package removal
+
+ -- Rudra Bali <rs2009@ubuntu.com>  Thu, 19 Jan 2023 14:54:09 +0530
+
 blend (1.0.3) lunar; urgency=emergency
 
   * Sync with blend 1.0.3, which updates the completions

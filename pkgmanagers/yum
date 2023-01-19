@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+BLEND_COMMAND="sudo yum $@" blend enter fedora-rawhide --distro fedora-rawhide
+ret=$?
+
+echo
+echo -e '\033[01m\033[36m>> i: \033[0m\033[01mapps installed this way will need to be exported manually using `blend export [pkg]`,\033[0m'
+echo -e '\033[01m\033[36m>> i: \033[0m\033[01mor you can run them by opening the Fedora-rawhide terminal (or running `blend enter -cn fedora-rawhide`)\033[0m'
+
+exit $ret

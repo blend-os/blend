@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+BLEND_COMMAND="sudo apt $@" blend enter ubuntu-22.10 --distro ubuntu-22.10
+ret=$?
+
+echo
+echo -e '\033[01m\033[36m>> i: \033[0m\033[01mapps installed this way will need to be exported manually using `blend export [pkg]`,\033[0m'
+echo -e '\033[01m\033[36m>> i: \033[0m\033[01mor you can run them by opening the Ubuntu-22.10 terminal (or running `blend enter -cn ubuntu-22.10`)\033[0m'
+
+exit $ret

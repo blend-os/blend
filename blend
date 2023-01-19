@@ -5,7 +5,7 @@ import shutil
 import argparse
 import subprocess
 
-__version = '1.0.1'
+__version = '1.0.3'
 
 ### Colors
 class colors:
@@ -77,6 +77,8 @@ def distrobox_list_containers():
         '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
     if len(_list) == 0:
         info('No containers. Create one by installing a package (`blend install hello`), or manually create one (`blend create-container arch`).')
+    else:
+        info('List of containers:')
     for container in _list.splitlines(keepends=False):
         if 'distrobox' in container.split(':')[1]:
             print(container.split(':')[0])
@@ -107,7 +109,7 @@ def distrobox_create_container():
         distrobox_run_container('cd ~; git clone https://aur.archlinux.org/yay.git')
         distrobox_run_container('cd ~/yay; makepkg --noconfirm -si')
 
-distrobox_get_output = lambda cmd: subprocess.run(['distrobox-enter', '-nw', '-n', args.container_name, '--', cmd],
+distrobox_get_output = lambda cmd: subprocess.run(['distrobox-enter', '-nw', '-n', args.container_name, '--', 'sh', '-c', cmd],
                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
 
 def distrobox_run_container(cmd):
@@ -275,20 +277,37 @@ def install_de():
                 distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
                 distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
         subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Name=GNOME on Wayland ({args.container_name})" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Name=GNOME on Wayland  ({args.container_name})" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
         subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
         subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
         subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
         subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
         subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Name=GNOME on Xorg  ({args.container_name})" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
         subprocess.run(f'sudo chmod 755 /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        subprocess.run(f'sudo chmod 755 /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+    distrobox_run_container('sudo mkdir -p /usr/share/applications /usr/local/share/applications')
+    distrobox_run_container('''echo 'for dir in /usr/share/applications /usr/local/share/applications; do sudo find $dir -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done' | sudo bash''')
 
 def copy_desktop_files(pkg):
-    distrobox_run_container('sudo mkdir -p /usr/share/applications')
-    desktop_files = distrobox_get_output("find /usr/share/applications -type f -printf '%f\\n'").split('\r\n')
-    desktop_files[:] = [f.removesuffix('.desktop') for f in desktop_files if '.desktop' in f]
-    for f in desktop_files:
-        distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {f}')
+    distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {pkg} &>/dev/null')
+
+def del_desktop_files(pkg):
+    distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {pkg} --delete &>/dev/null')
+
+def export_blend():
+    for pkg in args.pkg:
+        copy_desktop_files(pkg)
+
+def unexport_blend():
+    for pkg in args.pkg:
+        del_desktop_files(pkg)
 
 def install_blend():
     if len(args.pkg) != 0:
@@ -314,7 +333,7 @@ def remove_blend():
         if not distrobox_check_container(args.container_name):
             error(f"container {args.container_name} doesn't exist")
         distrobox_remove_pkg(pkg)
-        subprocess.run(f'rm -f ~/.local/share/applications/{args.container_name}-*{pkg}*.desktop', shell=True)
+        del_desktop_files(pkg)
 
 def search_blend():
     if len(args.pkg) == 0:
@@ -364,13 +383,12 @@ def update_blends():
         error(f'distribution {args.distro} is not supported')
 
 def enter_container():
-    if len(args.pkg) == 0:
-        error(f'you need to specify a container (run `blend list-container` to list all the containers)')
-        exit()
-    container = args.pkg[0]
-    info(f'entering container {container}')
-    args.container_name = container
-    subprocess.call(['distrobox-enter', '-n', args.container_name])
+    if not distrobox_check_container(args.container_name):
+        distrobox_create_container()
+    if os.environ.get('BLEND_COMMAND') == None or os.environ.get('BLEND_COMMAND') == '':
+        exit(subprocess.call(['distrobox-enter', '-n', args.container_name]))
+    else:
+        exit(subprocess.call(['distrobox-enter', '-n', args.container_name, '-e', os.environ['BLEND_COMMAND']]))
 
 def create_container():
     for container in args.pkg:
@@ -381,7 +399,7 @@ def create_container():
 def remove_container():
     for container in args.pkg:
         info(f'removing container {container}')
-        subprocess.run(['podman', 'stop', container], stdout=subprocess.DEVNULL)
+        subprocess.run(['podman', 'stop', container], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         subprocess.run(['distrobox-rm', container, '--force'], stdout=subprocess.DEVNULL)
 
 def start_containers():
@@ -423,6 +441,8 @@ You can use any of these distros by passing the option {colors.bold}--distro=[NA
 
 You can even install a supported desktop environment in a blend container (run `blend install-de [DESKTOP ENVIRONMENT NAME]` to install your favorite desktop environment).
 
+However, this feature is still somewhat experimental, and some apps might be buggy.
+
 Here's a list of the supported desktop environments:
 {colors.bold}1.{colors.reset} gnome
 {colors.bold}2.{colors.reset} mate
@@ -434,8 +454,10 @@ Here's a list of the supported desktop environments:
   {colors.bold}help{colors.reset}                  Show this help message and exit.
   {colors.bold}version{colors.reset}               Show version information and exit.
   {colors.bold}enter{colors.reset}                 Enter the container shell.
+  {colors.bold}export{colors.reset}                Export the desktop entry for an installed blend.
+  {colors.bold}unexport{colors.reset}              Unexport the desktop entry for a blend.
   {colors.bold}install{colors.reset}               Install packages inside a container.
-  {colors.bold}install-de{colors.reset}            Install a desktop environment inside a container.
+  {colors.bold}install-de{colors.reset}            Install a desktop environment inside a container. {colors.bold}(EXPERIMENTAL){colors.reset}
   {colors.bold}remove{colors.reset}                Remove packages inside a managed container.
   {colors.bold}create-container{colors.reset}      Create a container managed by blend.
   {colors.bold}remove-container{colors.reset}      Remove a container managed by blend.
@@ -471,6 +493,8 @@ command_map = { 'install': install_blend,
                 'start-containers': start_containers,
                 'sync': sync_blends,
                 'update': update_blends,
+                'export': export_blend,
+                'unexport': unexport_blend,
                 'search': search_blend,
                 'show': show_blend,
                 'help': 'help',
@@ -488,16 +512,13 @@ if len(sys.argv) == 1:
 
 args = parser.parse_intermixed_args()
 
+command = command_map[args.command]
+
 distro_input = args.distro
 args.distro = default_distro if args.distro == None else args.distro[0]
 cn_input = args.container_name
 args.container_name = args.distro if args.container_name == None else args.container_name[0]
 
-if args.container_name in distro_map and not args.distro == args.container_name and distro_input == None:
-    args.distro = args.container_name
-    info(f'assuming you meant to use {args.distro} as the distro')
-
-command = command_map[args.command]
 if command == 'help':
     parser.print_help()
 elif command == 'version':

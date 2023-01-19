@@ -15,7 +15,7 @@ This was originally developed by VanillaOS.
 Usage:
   blend [command] [options] [arguments]
 
-Version: 1.0.1
+Version: 1.0.3
 
 blend is a package manager for blendOS, which includes support for Arch, Ubuntu and Fedora packages.
 
@@ -32,6 +32,8 @@ You can use any of these distros by passing the option --distro=[NAME OF THE DIS
 
 You can even install a supported desktop environment in a blend container (run `blend install-de [DESKTOP ENVIRONMENT NAME]` to install your favorite desktop environment).
 
+However, this feature is still somewhat experimental, and some apps might be buggy.
+
 Here's a list of the supported desktop environments:
 1. gnome
 2. mate
@@ -43,8 +45,10 @@ available commands:
   help                  Show this help message and exit.
   version               Show version information and exit.
   enter                 Enter the container shell.
+  export                Export the desktop entry for an installed blend.
+  unexport              Unexport the desktop entry for a blend.
   install               Install packages inside a container.
-  install-de            Install a desktop environment inside a container.
+  install-de            Install a desktop environment inside a container. (EXPERIMENTAL)
   remove                Remove packages inside a managed container.
   create-container      Create a container managed by blend.
   remove-container      Remove a container managed by blend.

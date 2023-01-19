@@ -7,7 +7,8 @@ _completions() {
 
     if [[ "$COMP_CWORD" == 1 ]]; then
         SUGGESTIONS=('install' 'remove' 'update' 'show' 'search' 'enter' 'create-container' 'remove-container' \
-          'install-de' 'list-container' 'start-containers' 'sync' 'help' 'version' )
+          'install-de' 'list-containers' 'start-containers' 'sync' 'help' 'version' 'export' 'unexport',
+          '--container-name=' '--distro=' '--noconfirm' '--version')
     fi
 
     COMPREPLY=($(compgen -W "${SUGGESTIONS[*]}" "${COMP_WORDS[$COMP_CWORD]}"))

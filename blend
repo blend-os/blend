@@ -382,6 +382,12 @@ def update_blends():
     else:
         error(f'distribution {args.distro} is not supported')
 
+def system_update():
+    if args.noconfirm == True:
+        exit(subprocess.call(['sudo', '/usr/bin/pacman', '--noconfirm', '-Syu']))
+    else:
+        exit(subprocess.call(['sudo', '/usr/bin/pacman', '-Syu']))
+
 def enter_container():
     if not distrobox_check_container(args.container_name):
         distrobox_create_container()
@@ -467,6 +473,7 @@ Here's a list of the supported desktop environments:
   {colors.bold}search{colors.reset}                Search for packages in a managed container.
   {colors.bold}show{colors.reset}                  Show details about a package.
   {colors.bold}update{colors.reset}                Update all the packages in a managed container.
+  {colors.bold}system-update{colors.reset}         Update all the system packages.
 
 {colors.bold}{colors.fg.purple}options for commands{colors.reset}:
   {colors.bold}-cn CONTAINER NAME, --container-name CONTAINER NAME{colors.reset}
@@ -493,6 +500,7 @@ command_map = { 'install': install_blend,
                 'start-containers': start_containers,
                 'sync': sync_blends,
                 'update': update_blends,
+                'system-update': system_update,
                 'export': export_blend,
                 'unexport': unexport_blend,
                 'search': search_blend,

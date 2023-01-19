@@ -7,7 +7,7 @@ _completions() {
 
     if [[ "$COMP_CWORD" == 1 ]]; then
         SUGGESTIONS=('install' 'remove' 'update' 'show' 'search' 'enter' 'create-container' 'remove-container' \
-          'install-de' 'list-containers' 'start-containers' 'sync' 'help' 'version' 'export' 'unexport',
+          'install-de' 'list-containers' 'start-containers' 'sync' 'help' 'version' 'export' 'unexport' 'system-update' \
           '--container-name=' '--distro=' '--noconfirm' '--version')
     fi
 

@@ -1,4 +1,0 @@
-blend /usr/bin/
-pkgmanagers /blend/
-blend-pkgmngr-path.sh /etc/profile.d/
-completions/blend /usr/share/bash-completion/completions/

@@ -384,9 +384,9 @@ def update_blends():
 
 def system_update():
     if args.noconfirm == True:
-        exit(subprocess.call(['sudo', '/usr/bin/pacman', '--noconfirm', '-Syu']))
+        exit(subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '--noconfirm', '-Syu']))
     else:
-        exit(subprocess.call(['sudo', '/usr/bin/pacman', '-Syu']))
+        exit(subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '-Syu']))
 
 def enter_container():
     if not distrobox_check_container(args.container_name):

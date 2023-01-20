@@ -383,12 +383,16 @@ def update_blends():
         error(f'distribution {args.distro} is not supported')
 
 def system_update():
-    if args.noconfirm == True:
-        ret = subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '--noconfirm', '-Syu'])
-    else:
-        ret = subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '-Syu'])
-    subprocess.call(['sudo', 'almost', 'enter', 'ro'])
-    exit(ret)
+    try:
+        if args.noconfirm == True:
+            ret = subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '--noconfirm', '-Syu'])
+        else:
+            ret = subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '-Syu'])
+        subprocess.call(['sudo', 'almost', 'enter', 'ro'])
+        exit(ret)
+    except:
+        subprocess.call(['sudo', 'almost', 'enter', 'ro'])
+        exit(1)
 
 def enter_container():
     if not distrobox_check_container(args.container_name):

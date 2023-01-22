@@ -3,7 +3,7 @@
   <p align="center">A package manager for blendOS</p>
 </div>
 
-**rs2009 here. I've used a README from a Vanilla OS repository (almost) as a template, and accidentally included a paragraph from it. I've written this package manager from scratch (none of the other files in this repository have any code from any other repository on GitHub, other than anything developed me).**
+**rs2009 here. I've used a README from a Vanilla OS repository (almost) as a template, and accidentally included a paragraph from it. I've written this package manager from scratch (none of the files aside from the README in this repository have any code from any other repository on GitHub, other than anything developed by me).**
 
 ### Help
 ```

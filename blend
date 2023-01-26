@@ -385,13 +385,15 @@ def update_blends():
 def system_update():
     try:
         if args.noconfirm == True:
-            ret = subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '--noconfirm', '-Syu'])
+            ret = subprocess.call(['sudo', 'nearly', 'run', '/usr/bin/pacman --noconfirm -Syu'])
         else:
-            ret = subprocess.call(['sudo', 'almost', 'run', '/usr/bin/pacman', '-Syu'])
-        subprocess.call(['sudo', 'almost', 'enter', 'ro'])
-        exit(ret)
+            ret = subprocess.call(['sudo', 'nearly', 'run', '/usr/bin/pacman -Syu'])
     except:
-        subprocess.call(['sudo', 'almost', 'enter', 'ro'])
+        try:
+            subprocess.call(['sudo', 'nearly', 'enter', 'ro'])
+        except KeyboardInterrupt:
+            error('looks like you interrupted blend. your system is currently in read-write mode')
+            info('run `nearly enter ro\' to enable immutability again')
         exit(1)
 
 def enter_container():

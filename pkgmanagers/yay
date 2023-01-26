@@ -3,8 +3,4 @@
 BLEND_COMMAND="yay $@" blend enter arch
 ret=$?
 
-echo
-echo -e '\033[01m\033[36m>> i: \033[0m\033[01mapps installed this way will need to be exported manually using `blend export [pkg]`,\033[0m'
-echo -e '\033[01m\033[36m>> i: \033[0m\033[01mor you can run them by opening the Arch terminal (or running `blend enter -cn arch`)\033[0m'
-
 exit $ret

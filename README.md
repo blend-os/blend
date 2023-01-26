@@ -1,14 +1,8 @@
 <div align="center">
   <h1 align="center">blend</h1>
   <p align="center">A package manager for blendOS</p>
+  <p align="center"><b>rs2009 here. I've used a README from a Vanilla OS repository (almost) as a template, and accidentally included a paragraph from it. I've written this package manager from scratch (none of the files aside from the README in this repository have any code from any other repository on GitHub, other than anything developed by me).</b></p>
 </div>
-
-# almost
-On-demand immutability for blendOS.
-
-This was originally developed by VanillaOS.
-
-> **Note**: This is a work in progress. It is not ready for production use.
 
 ### Help
 ```

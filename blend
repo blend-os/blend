@@ -197,103 +197,113 @@ def install_de():
     info(f'installing {name} on {args.container_name} (using {args.distro})')
     print()
     info('ignore any errors after this')
-    distrobox_run_container('sudo umount /run/systemd/system')
-    distrobox_run_container('sudo rmdir /run/systemd/system')
-    distrobox_run_container('sudo ln -s /run/host/run/systemd/system /run/systemd &> /dev/null')
-    distrobox_run_container('sudo ln -s /run/host/run/dbus/system_bus_socket /run/dbus/ &> /dev/null')
-    distrobox_run_container('sudo mkdir -p /usr/local/bin')
-    distrobox_run_container('echo "#!/usr/bin/env bash" | sudo tee /usr/local/bin/disable_dbusactivatable_blend')
-    distrobox_run_container('echo "if [[ \$DISABLE_REPEAT -ne 1 ]]; then" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
-    distrobox_run_container('''echo 'while true; do for dir in ${XDG_DATA_DIRS//:/ }; do sudo find $dir/applications -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done; sleep 5; done' | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend''')
-    distrobox_run_container('echo "else" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
-    distrobox_run_container('''echo 'for dir in ${XDG_DATA_DIRS//:/ }; do sudo find $dir/applications -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done' | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend''')
-    distrobox_run_container('echo "fi" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
-    distrobox_run_container('sudo chmod 755 /usr/local/bin/disable_dbusactivatable_blend')
-    distrobox_run_container('sudo mkdir -p /etc/xdg/autostart')
-    distrobox_run_container('echo "[Desktop Entry]" | sudo tee /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    distrobox_run_container('echo "Version=1.0" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    distrobox_run_container('echo "Name=Remove DBusActivatable (blend)" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    distrobox_run_container('echo "Comment=Remove DBusActivatable in all desktop files" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    distrobox_run_container('echo "Exec=disable_dbusactivatable_blend" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    distrobox_run_container('echo "Type=Application" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    distrobox_run_container('sudo chmod 755 /usr/share/applications/disable_dbusactivatable_blend.desktop')
-    if name == 'mate':
-        if args.distro == 'fedora-rawhide':
-            if args.noconfirm == True:
-                distrobox_run_container(f'sudo dnf --allowerasing -y groupinstall MATE')
-            else:
-                distrobox_run_container(f'sudo dnf --allowerasing groupinstall MATE')
-        elif args.distro == 'arch':
-            if args.noconfirm == True:
-                distrobox_run_container(f'sudo pacman --noconfirm -S mate mate-extra')
-            else:
-                distrobox_run_container(f'sudo pacman -S mate mate-extra')
-        elif args.distro.startswith('ubuntu-'):
-            distrobox_run_container(f'sudo apt-get update')
-            if args.noconfirm == True:
-                distrobox_run_container(f'sudo apt-get install -y ubuntu-mate-desktop')
-            else:
-                distrobox_run_container(f'sudo apt-get install ubuntu-mate-desktop')
-        subprocess.run('sudo mkdir -p /usr/local/bin', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "export GTK_MODULES=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "export GTK3_MODULES=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "export LD_PRELOAD=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "chown -f -R $USER:$USER /tmp/.X11-unix" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "distrobox-enter {args.container_name} -- mate-session" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'sudo chmod 755 /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Version=1.0" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Name=MATE ({args.container_name})" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Comment=Use this session to run MATE as your desktop environment" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Exec={args.container_name}-mate-blend" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'sudo chmod 755 /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-    elif name == 'gnome':
-        if args.distro == 'fedora-rawhide':
-            if args.noconfirm == True:
-                distrobox_run_container(f'sudo dnf --allowerasing -y groupinstall GNOME')
-                distrobox_run_container(f'sudo dnf --allowerasing -y remove gnome-terminal')
-                distrobox_run_container(f'sudo dnf --allowerasing -y install gnome-console')
-            else:
-                distrobox_run_container(f'sudo dnf --allowerasing groupinstall GNOME')
-                distrobox_run_container(f'sudo dnf --allowerasing -y remove gnome-terminal')
-                distrobox_run_container(f'sudo dnf --allowerasing -y install gnome-console')
-        elif args.distro == 'arch':
-            if args.noconfirm == True:
-                distrobox_run_container(f'sudo pacman --noconfirm -S gnome gnome-console')
-                distrobox_run_container(f'sudo pacman --noconfirm -Rcns gnome-terminal')
-            else:
-                distrobox_run_container(f'sudo pacman -S gnome gnome-console')
-                distrobox_run_container(f'sudo pacman --noconfirm -Rcns gnome-terminal')
-        elif args.distro.startswith('ubuntu-'):
-            distrobox_run_container(f'sudo apt-get update')
-            if args.noconfirm == True:
-                distrobox_run_container(f'sudo apt-get install -y ubuntu-desktop gnome-console')
-                distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
-                distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
-            else:
-                distrobox_run_container(f'sudo apt-get install ubuntu-desktop gnome-console')
-                distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
-                distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
-        subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Name=GNOME on Wayland  ({args.container_name})" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Name=GNOME on Xorg  ({args.container_name})" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'sudo chmod 755 /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-        subprocess.run(f'sudo chmod 755 /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
-    distrobox_run_container('sudo mkdir -p /usr/share/applications /usr/local/share/applications')
-    distrobox_run_container('''echo 'for dir in /usr/share/applications /usr/local/share/applications; do sudo find $dir -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done' | sudo bash''')
+    try:
+        subprocess.run('sudo nearly enter rw', shell=True)
+        distrobox_run_container('sudo umount /run/systemd/system')
+        distrobox_run_container('sudo rmdir /run/systemd/system')
+        distrobox_run_container('sudo ln -s /run/host/run/systemd/system /run/systemd &> /dev/null')
+        distrobox_run_container('sudo ln -s /run/host/run/dbus/system_bus_socket /run/dbus/ &> /dev/null')
+        distrobox_run_container('sudo mkdir -p /usr/local/bin')
+        distrobox_run_container('echo "#!/usr/bin/env bash" | sudo tee /usr/local/bin/disable_dbusactivatable_blend')
+        distrobox_run_container('echo "if [[ \$DISABLE_REPEAT -ne 1 ]]; then" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
+        distrobox_run_container('''echo 'while true; do for dir in ${XDG_DATA_DIRS//:/ }; do sudo find $dir/applications -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done; sleep 5; done' | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend''')
+        distrobox_run_container('echo "else" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
+        distrobox_run_container('''echo 'for dir in ${XDG_DATA_DIRS//:/ }; do sudo find $dir/applications -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done' | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend''')
+        distrobox_run_container('echo "fi" | sudo tee -a /usr/local/bin/disable_dbusactivatable_blend')
+        distrobox_run_container('sudo chmod 755 /usr/local/bin/disable_dbusactivatable_blend')
+        distrobox_run_container('sudo mkdir -p /etc/xdg/autostart')
+        distrobox_run_container('echo "[Desktop Entry]" | sudo tee /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        distrobox_run_container('echo "Version=1.0" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        distrobox_run_container('echo "Name=Remove DBusActivatable (blend)" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        distrobox_run_container('echo "Comment=Remove DBusActivatable in all desktop files" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        distrobox_run_container('echo "Exec=disable_dbusactivatable_blend" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        distrobox_run_container('echo "Type=Application" | sudo tee -a /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        distrobox_run_container('sudo chmod 755 /usr/share/applications/disable_dbusactivatable_blend.desktop')
+        if name == 'mate':
+            if args.distro == 'fedora-rawhide':
+                if args.noconfirm == True:
+                    distrobox_run_container(f'sudo dnf --allowerasing -y groupinstall MATE')
+                else:
+                    distrobox_run_container(f'sudo dnf --allowerasing groupinstall MATE')
+            elif args.distro == 'arch':
+                if args.noconfirm == True:
+                    distrobox_run_container(f'sudo pacman --noconfirm -S mate mate-extra')
+                else:
+                    distrobox_run_container(f'sudo pacman -S mate mate-extra')
+            elif args.distro.startswith('ubuntu-'):
+                distrobox_run_container(f'sudo apt-get update')
+                if args.noconfirm == True:
+                    distrobox_run_container(f'sudo apt-get install -y ubuntu-mate-desktop')
+                else:
+                    distrobox_run_container(f'sudo apt-get install ubuntu-mate-desktop')
+            subprocess.run('sudo mkdir -p /usr/local/bin', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "export GTK_MODULES=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "export GTK3_MODULES=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "export LD_PRELOAD=" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "chown -f -R $USER:$USER /tmp/.X11-unix" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "distrobox-enter {args.container_name} -- mate-session" | sudo tee -a /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'sudo chmod 755 /usr/local/bin/{args.container_name}-mate-blend', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Version=1.0" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Name=MATE ({args.container_name})" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Comment=Use this session to run MATE as your desktop environment" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Exec={args.container_name}-mate-blend" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'sudo chmod 755 /usr/share/xsessions/mate-blend-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        elif name == 'gnome':
+            if args.distro == 'fedora-rawhide':
+                if args.noconfirm == True:
+                    distrobox_run_container(f'sudo dnf --allowerasing -y groupinstall GNOME')
+                    distrobox_run_container(f'sudo dnf --allowerasing -y remove gnome-terminal')
+                    distrobox_run_container(f'sudo dnf --allowerasing -y install gnome-console')
+                else:
+                    distrobox_run_container(f'sudo dnf --allowerasing groupinstall GNOME')
+                    distrobox_run_container(f'sudo dnf --allowerasing -y remove gnome-terminal')
+                    distrobox_run_container(f'sudo dnf --allowerasing -y install gnome-console')
+            elif args.distro == 'arch':
+                if args.noconfirm == True:
+                    distrobox_run_container(f'sudo pacman --noconfirm -S gnome gnome-console')
+                    distrobox_run_container(f'sudo pacman --noconfirm -Rcns gnome-terminal')
+                else:
+                    distrobox_run_container(f'sudo pacman -S gnome gnome-console')
+                    distrobox_run_container(f'sudo pacman --noconfirm -Rcns gnome-terminal')
+            elif args.distro.startswith('ubuntu-'):
+                distrobox_run_container(f'sudo apt-get update')
+                if args.noconfirm == True:
+                    distrobox_run_container(f'sudo apt-get install -y ubuntu-desktop gnome-console')
+                    distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
+                    distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
+                else:
+                    distrobox_run_container(f'sudo apt-get install ubuntu-desktop gnome-console')
+                    distrobox_run_container(f'sudo apt-get purge -y gnome-terminal')
+                    distrobox_run_container(f'sudo apt-get purge -y --auto-remove')
+            subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Name=GNOME on Wayland  ({args.container_name})" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "[Desktop Entry]" | sudo tee /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Name=GNOME on Xorg  ({args.container_name})" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Comment=This session logs you into GNOME" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Exec=distrobox-enter -n {args.container_name} -- gnome-session --builtin" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "Type=Application" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "DesktopNames=GNOME" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'echo "X-GDM-SessionRegisters=true" | sudo tee -a /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'sudo chmod 755 /usr/share/wayland-sessions/gnome-wayland-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+            subprocess.run(f'sudo chmod 755 /usr/share/xsessions/gnome-xorg-{args.container_name}.desktop', stdout=subprocess.DEVNULL, shell=True)
+        distrobox_run_container('sudo mkdir -p /usr/share/applications /usr/local/share/applications')
+        distrobox_run_container('''echo 'for dir in /usr/share/applications /usr/local/share/applications; do sudo find $dir -type f -exec sed -i -e '"'s/DBusActivatable=.*//g'"' {} '"';'"'; done' | sudo bash''')
+        subprocess.run('sudo nearly enter ro', shell=True)
+    except:
+        try:
+            subprocess.call(['sudo', 'nearly', 'enter', 'ro'])
+        except KeyboardInterrupt:
+            error('looks like you interrupted blend. your system is currently in read-write mode')
+            info('run `nearly enter ro\' to enable immutability again')
+        exit(1)
 
 def copy_desktop_files(pkg):
     distrobox_run_container(f'CONTAINER_ID={args.container_name} distrobox-export --app {pkg} &>/dev/null')

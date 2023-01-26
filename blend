@@ -417,6 +417,8 @@ def enter_container():
 def create_container():
     for container in args.pkg:
         args.container_name = container
+        if container in distro_map.keys() and distro_input == None:
+            arg.distro = container
         distrobox_create_container()
         subprocess.call(['distrobox-enter', '-nw', '-n', args.container_name, '--', 'echo -n'])
 

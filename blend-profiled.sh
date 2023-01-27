@@ -22,11 +22,11 @@ if [[ ! -f "${HOME}/.disable_blend_msg" ]]; then
 	echo
 
 	echo -e 'Here are some useful commands:'
-	echo -e "${shell_reset}To install a package (from the Arch repos and the AUR) in an Arch container:${shell_bold}"
+	echo -e "${shell_reset}To install a package in an Arch container:${shell_bold}"
 	echo -e "  blend install <PKG>"
-	echo -e "${shell_reset}To remove a package (from the Arch repos and the AUR) in an Arch container:${shell_bold}"
+	echo -e "${shell_reset}To remove a package in an Arch container:${shell_bold}"
 	echo -e "  blend remove <PKG>"
-	echo -e "${shell_reset}To install a package (from the Arch repos and the AUR) in a Fecora container:${shell_bold}"
+	echo -e "${shell_reset}To install a package in a Fedora container:${shell_bold}"
 	echo -e "  blend install <PKG> -d fedora-rawhide"
 	echo -e "${shell_reset}To enter a Fedora container:${shell_bold}"
 	echo -e "  blend enter -cn fedora-rawhide"

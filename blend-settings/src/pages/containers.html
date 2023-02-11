@@ -1,0 +1,49 @@
+<div class="container-fluid d-flex justify-content-center">
+  <div class="col-12 col-lg-10 col-xl-8 mx-auto">
+    <strong class="mb-0">Containers</strong>
+    <p>You can install any app from any of the supported distributions (Arch, Fedora, and Ubuntu). Any apps you install in them will appear as regular applications on your system, and so will any binaries. In case a binary is common between two containers, the binary from the most recently created container will be exported. You can override this by rearranging (dragging) the containers below to select the priority that should be assigned to each container.</p>
+    <div class="list-group mb-5 shadow" id="container-list">
+      <div class="list-group-item">
+        <div class="row align-items-center">
+          <div class="col">
+            <strong class="mb-0">Loading list of containers.</strong>
+            <p class="text-muted mb-0">You'll find a list of all the containers here.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid d-flex justify-content-center">
+  <div class="col-12 col-lg-10 col-xl-8 mx-auto">
+    <strong class="mb-0">Create new container</strong>
+    <form onsubmit="create_container(); return false">
+      <div class="form-group row">
+        <label for="inputContainerName" class="col-sm-3 col-form-label">Container name</label>
+        <div class="col-sm-4">
+          <input type="text" class="form-control" id="inputContainerName" placeholder="Container name" required>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="inputContainerDistro" class="col-sm-3 col-form-label">Distribution</label>
+        <div class="col-sm-4">
+          <select class="form-control" id="inputContainerDistro">
+            <option selected>Arch</option>
+            <option>Fedora Rawhide</option>
+            <option>Ubuntu 22.04</option>
+            <option>Ubuntu 22.10</option>
+          </select>
+        </div>
+      </div>
+      <br>
+      <button type="submit" id="publish-button" class="btn btn-primary">Create container</button>
+    </form>
+  </div>
+</div>
+
+<!-- Import generic page JS. -->
+<script src="internal/js/generic_page.js"></script>
+
+<!-- Import containers JS. -->
+<script src="internal/js/containers.js"></script>

@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-BLEND_COMMAND="yay $@" blend enter arch
-ret=$?
-
-exit $ret

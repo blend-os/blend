@@ -1,0 +1,28 @@
+{
+  "name": "blend-settings",
+  "version": "1.0.0",
+  "description": "A settings app for blendOS",
+  "main": "main.js",
+  "homepage": "https://blendos.org",
+  "author": "Rudra Saraswat",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "@electron/remote": "^2.0.9",
+    "@types/jquery": "^3.5.16",
+    "jquery": "^3.6.3",
+    "js-yaml": "^4.1.0",
+    "node-pty": "github:daniel-brenot/node-pty#rust-port",
+    "sortablejs": "^1.15.0",
+    "xterm": "^5.1.0",
+    "xterm-addon-fit": "^0.7.0",
+    "xterm-addon-ligatures": "^0.6.0"
+  },
+  "devDependencies": {
+    "electron": "^23.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0
+
+build() {
+    add_module overlay
+    add_binary bash
+    add_binary tar
+    add_runscript
+}
+
+help() {
+    cat <<HELPEOF
+This provides a support for mounting the blend /usr overlay. No
+configuration is needed.
+HELPEOF
+}
+
+# vim: set ft=sh ts=4 sw=4 et:

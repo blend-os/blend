@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-BLEND_COMMAND="sudo apt-get $@" blend enter ubuntu-22.10 --distro ubuntu-22.10
-ret=$?
-
-exit $ret

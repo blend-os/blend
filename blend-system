@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Rudra Saraswat
+# 
+# This file is part of blend.
+# 
+# blend is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# blend is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with blend.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os, re, sys, time
+import argparse
+import subprocess
+
+__version = '2.0.0'
+
+### Colors
+class colors:
+    reset = '\033[0m'
+    bold = '\033[01m'
+    disable = '\033[02m'
+    underline = '\033[04m'
+    reverse = '\033[07m'
+    strikethrough = '\033[09m'
+    invisible = '\033[08m'
+
+    class fg:
+        black = '\033[30m'
+        red = '\033[31m'
+        green = '\033[32m'
+        orange = '\033[33m'
+        blue = '\033[34m'
+        purple = '\033[35m'
+        cyan = '\033[36m'
+        lightgrey = '\033[37m'
+        darkgrey = '\033[90m'
+        lightred = '\033[91m'
+        lightgreen = '\033[92m'
+        yellow = '\033[93m'
+        lightblue = '\033[94m'
+        pink = '\033[95m'
+        lightcyan = '\033[96m'
+
+    class bg:
+        black = '\033[40m'
+        red = '\033[41m'
+        green = '\033[42m'
+        orange = '\033[43m'
+        blue = '\033[44m'
+        purple = '\033[45m'
+        cyan = '\033[46m'
+        lightgrey = '\033[47m'
+
+### END
+
+### Helper functions
+
+def info(msg):
+    print (colors.bold + colors.fg.cyan + '>> i: ' + colors.reset + colors.bold + msg + colors.reset)
+
+def error(err):
+    print (colors.bold + colors.fg.red + '>> e: ' + colors.reset + colors.bold + err + colors.reset)
+
+def load_prev_state():
+    subprocess.call(['rm', '-rf', '/blend/overlay/current'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['mkdir', '-p', '/blend/overlay/current/usr'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['tar', '-xvpzf', f'/blend/states/state{current_state()}.tar.gz', '-C', '/blend/overlay/current/usr', '--numeric-owner'],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['rm', '-f', f'/blend/states/state{current_state()}.tar.gz'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+### END
+
+def current_state():
+    _state = -1
+    for s in os.listdir('/blend/states'):
+        if re.match(r'^state([0-9]+)\.tar\.gz$', s):
+            if int(s[5:-7]) > _state:
+                _state = int(s[5:-7])
+    return _state
+
+def load_overlay():
+    if os.path.isfile('/blend/states/.load_prev_state') and os.path.isfile(f'/blend/states/state{current_state()}.tar.gz'):
+        load_prev_state()
+        os.remove('/blend/states/.load_prev_state')
+    subprocess.call(['mkdir', '-p', '/blend/overlay/current/usr'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['rm', '-rf', '/blend/overlay/workdir'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['mkdir', '-p', '/blend/overlay/workdir'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['touch', '/blend/overlay/current/usr/.blend_overlay'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['chattr', '+i', '/blend/overlay/current/usr/.blend_overlay'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['mount', '-t', 'overlay', 'overlay', '-o', 'rw,lowerdir=/usr,upperdir=/blend/overlay/current/usr,workdir=/blend/overlay/workdir',
+                         '/usr', '-o', 'index=off'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    info('mounted overlay')
+
+def save_state():
+    subprocess.call(['mkdir', '-p', '/blend/states'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    state = current_state() + 1
+
+    subprocess.call(r"find /blend/states/ -type f -not -name 'state" + str(state - 1) + ".tar.gz' -print0 | xargs -0 -I {} rm {}", stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
+    subprocess.call(['tar', '-C', '/blend/overlay/current/usr', '-cpzf', f'/blend/states/state{state}.tar.gz', '.'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    info(f'saved state {state}')
+
+def autosave_state():
+    while True:
+        if not os.path.isfile('/blend/states/.disable_states'):
+            save_state()
+        time.sleep(6*60*60) # XXX: make this configurable
+
+def toggle_states():
+    if os.path.isfile('/blend/states/.disable_states'):
+        os.remove('/blend/states/.disable_states')
+        info('enabled saving states automatically (every 6 hours; this will be configurable in future releases)')
+    else:
+        subprocess.call(['touch', '/blend/states/.disable_states'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        info('disabled saving states automatically')
+
+def rollback():
+    if current_state() == -1:
+        error('no states present')
+        exit(1)
+    subprocess.call(['touch', '/blend/states/.load_prev_state'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    info(f'will rollback to the previous state on the next boot')
+
+description = f'''
+{colors.bold}{colors.fg.purple}Usage:{colors.reset}
+  blend-system [command] [options] [arguments]
+
+{colors.bold}{colors.fg.purple}Version:{colors.reset} {__version}{colors.bold}
+
+{colors.bold}{colors.fg.purple}available commands{colors.reset}:
+  {colors.bold}help{colors.reset}                  Show this help message and exit.
+  {colors.bold}version{colors.reset}               Show version information and exit.
+  {colors.bold}load-overlay{colors.reset}          Load the current overlay.
+  {colors.bold}save-state{colors.reset}            Save the current state (backup).
+  {colors.bold}toggle-states{colors.reset}         Enable/disable automatic state creation (you can still manually save states).
+  {colors.bold}rollback{colors.reset}              Rollback to previous state.
+
+{colors.bold}{colors.fg.purple}options for commands{colors.reset}:
+  {colors.bold}-v, --version{colors.reset}         show version information and exit
+'''
+
+epilog = f'''
+{colors.bold}Made with {colors.fg.red}\u2764{colors.reset}{colors.bold} by Rudra Saraswat.{colors.reset}
+'''
+
+parser = argparse.ArgumentParser(description=description, usage=argparse.SUPPRESS,
+                                 epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
+command_map = { 'help': 'help',
+                'version': 'version',
+                'load-overlay': load_overlay,
+                'save-state': save_state,
+                'toggle-states': toggle_states,
+                'autosave-state': autosave_state,
+                'rollback': rollback }
+parser.add_argument('command', choices=command_map.keys(), help=argparse.SUPPRESS)
+parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
+
+if len(sys.argv) == 1:
+    parser.print_help()
+    exit()
+
+if os.geteuid() != 0:
+    error('requires root')
+    exit(1)
+
+args = parser.parse_intermixed_args()
+
+command = command_map[args.command]
+
+if command == 'help':
+    parser.print_help()
+elif command == 'version':
+    parser.parse_args(['--version'])
+else:
+    command()

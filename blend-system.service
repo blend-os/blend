@@ -1,0 +1,10 @@
+[Unit]
+Description=Save system state
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/blend-system autosave-state
+User=root
+
+[Install]
+WantedBy=multi-user.target

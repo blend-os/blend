@@ -1,0 +1,257 @@
+#!/usr/bin/env bash
+# Copyright (C) 2023 Rudra Saraswat
+# 
+# This file is part of blend.
+# 
+# blend is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# blend is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with blend.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ ! -f '/run/.containerenv' ]; then
+    echo 'not running in container'
+    exit 1
+fi
+
+while true; do
+    case $1 in
+        --uid)
+            if [ -n "$2" ]; then
+                _cuid="$2"
+                shift
+                shift
+            fi
+            ;;
+        --group)
+            if [ -n "$2" ]; then
+                _cgid="$2"
+                shift
+                shift
+            fi
+            ;;
+        --username)
+            if [ -n "$2" ]; then
+                _uname="$2"
+                shift
+                shift
+            fi
+            ;;
+        --home)
+            if [ -n "$2" ]; then
+                _uhome="$2"
+                shift
+                shift
+            fi
+            ;;
+        -*)
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+cat << 'EOF'
+
+
+ ▄▄▄▄    ██▓    ▓█████  ███▄    █ ▓█████▄ 
+▓█████▄ ▓██▒    ▓█   ▀  ██ ▀█   █ ▒██▀ ██▌
+▒██▒ ▄██▒██░    ▒███   ▓██  ▀█ ██▒░██   █▌
+▒██░█▀  ▒██░    ▒▓█  ▄ ▓██▒  ▐▌██▒░▓█▄   ▌
+░▓█  ▀█▓░██████▒░▒████▒▒██░   ▓██░░▒████▓ 
+░▒▓███▀▒░ ▒░▓  ░░░ ▒░ ░░ ▒░   ▒ ▒  ▒▒▓  ▒ 
+▒░▒   ░ ░ ░ ▒  ░ ░ ░  ░░ ░░   ░ ▒░ ░ ▒  ▒ 
+ ░    ░   ░ ░      ░      ░   ░ ░  ░ ░  ░ 
+ ░          ░  ░   ░  ░         ░    ░    
+      ░                            ░      
+
+EOF
+
+echo
+echo 'Starting blend... (this may take a few minutes)'
+echo
+
+bmount() {
+    ! [[ -d "$1" ]] && ! [[ -f "$1" ]] && return 0 # check if source dir exists
+    ! [[ -e "$2" ]] && findmnt "$2" &>/dev/null && umount "$2" # unmount target dir if a mount
+
+    [[ -d "$1" ]] && mkdir -p "$2" # create target dir if source is a dir
+    [[ -f "$1" ]] && touch "$2" # create target file if source is a file
+
+    mountflags="rslave"
+
+    ! [[ -z "$3" ]] && mountflags="$3"
+
+    mount --rbind -o "$mountflags" "$1" "$2" &>/dev/null
+}
+
+if [[ ! -f '/.init_blend.lock' ]]; then
+
+###
+
+if command -v apt-get &>/dev/null; then
+    apt-get update &>/dev/null
+    DEBIAN_FRONTEND=noninteractive apt-get -y install bash bc curl less wget apt-utils apt-transport-https dialog \
+                                                diffutils findutils gnupg2 sudo time util-linux libnss-myhostname \
+                                                libvte-2.9[0-9]-common libvte-common lsof ncurses-base passwd \
+                                                pinentry-curses libegl1-mesa libgl1-mesa-glx libvulkan1 mesa-vulkan-drivers &>/dev/null
+elif command -v pacman &>/dev/null; then
+    pacman --noconfirm -Syyu &>/dev/null
+    pacman --noconfirm -Sy bash bc curl wget diffutils findutils gnupg sudo time util-linux vte-common lsof ncurses pinentry \
+                             mesa opengl-driver vulkan-intel vulkan-radeon &>/dev/null
+elif command -v dnf &>/dev/null; then
+    dnf install -y --allowerasing bash bc curl wget diffutils findutils dnf-plugins-core gnupg2 less lsof passwd pinentry \
+                                    procps-ng vte-profile ncurses util-linux sudo time shadow-utils vulkan mesa-vulkan-drivers \
+                                    mesa-dri-drivers &>/dev/null
+
+fi
+
+mkdir -p /usr/local/bin
+wget -O /usr/local/bin/host-spawn "https://github.com/1player/host-spawn/releases/latest/download/host-spawn-$(uname -m)" &>/dev/null
+chmod 755 /usr/local/bin/host-spawn
+
+fi
+
+###
+
+for i in /var/log/journal /var/lib/systemd/coredump /var/lib/flatpak; do
+    bmount "/run/host/${i}" "$i" ro
+done
+
+for i in /etc/host.conf /run/media /media /mnt /var/mnt \
+         /run/libvirt /etc/machine-id /run/netconfig/ /run/udev \
+         /run/systemd/journal /run/systemd/seats /run/systemd/sessions \
+         /run/systemd/users /run/systemd/resolve/ /srv /var/lib/libvirt; do
+    bmount "/run/host/${i}" "$i" rw
+done
+
+init_ro_mounts="
+        /run/systemd/journal
+        /var/log/journal
+        /run/systemd/resolve
+        /run/systemd/seats
+        /run/systemd/sessions
+        /run/systemd/users
+        /var/lib/systemd/coredump
+        /etc/localtime"
+
+### Section START https://github.com/89luca89/distrobox/blob/main/distrobox-init#L772
+host_sockets="$(find /run/host/run -name 'user' \
+    -prune -o -path /run/host/run/media \
+    -prune -o -name 'nscd' \
+    -prune -o -name 'bees' \
+    -prune -o -name 'system_bus_socket' \
+    -prune -o -type s -print \
+    2> /dev/null || :)"
+### Section END
+
+for i in ${host_sockets}; do
+    container_socket="$(echo -n "$i" | sed 's/\/run\/host//g')"
+    if [ ! -S "${container_socket}" ] && [ ! -L "${container_socket}" ]; then
+        rm -f "${container_socket}"
+        mkdir -p "$(dirname "${container_socket}")"
+        ln -s "$i" "${container_socket}"
+    fi
+done
+
+bmount "/run/host/usr/share/themes" "/usr/local/share/themes" ro
+bmount "/run/host/usr/share/icons" "/usr/local/share/icons" ro
+bmount "/run/host/usr/share/fonts" "/usr/local/share/fonts" ro
+
+bmount "/usr/bin/host-blend" "/usr/bin/blend" ro
+
+# sudo touch /.init_blend.lock
+
+if [[ ! -f '/.init_blend.lock' ]]; then
+
+### Section START (based on https://github.com/89luca89/distrobox/blob/main/distrobox-init#L816)
+
+if [ -d "/usr/lib/rpm/" ]; then
+    mkdir -p /usr/lib/rpm/macros.d
+    net_mounts=""
+    for net_mount in \
+        ${HOST_MOUNTS_RO} ${HOST_MOUNTS} \
+        '/dev' '/proc' '/sys' '/tmp' \
+        '/etc/host.conf' '/etc/hosts' '/etc/resolv.conf' '/etc/localtime' \
+        '/usr/share/zoneinfo'; do
+
+        net_mounts="${net_mount}:${net_mounts}"
+
+    done
+    net_mounts=${net_mounts%?}
+    echo "%_netsharedpath ${net_mounts}" > /usr/lib/rpm/macros.d/macros.blend
+elif [ -d "/etc/dpkg/" ]; then
+    mkdir -p /etc/dpkg/dpkg.cfg.d
+    echo -n > /etc/dpkg/dpkg.cfg.d/00_blend
+    for net_mount in ${HOST_MOUNTS_RO} ${HOST_MOUNTS} '/etc/hosts' '/etc/resolv.conf' '/etc/localtime'; do
+        printf "path-exclude %s/*\n" "${net_mount}" >> /etc/dpkg/dpkg.cfg.d/00_blend
+    done
+### Section END
+elif [ -d "/usr/share/libalpm/scripts" ]; then
+	echo "#!/bin/sh" > /usr/share/libalpm/scripts/00_blend_pre_hook.sh
+    echo "#!/bin/sh" > /usr/share/libalpm/scripts/01_blend_post_hook.sh
+	echo "#!/bin/sh" > /usr/share/libalpm/scripts/02_blend_post_hook.sh
+
+    for net_mount in ${HOST_MOUNTS_RO}; do
+        echo "findmnt ${net_mount} &>/dev/null && umount ${net_mount} || :" >> /usr/share/libalpm/scripts/00_blend_pre_hook.sh
+        echo "test -e /run/host/${net_mount} && mount --rbind -o ro /run/host/${net_mount} ${net_mount} || :" >> /usr/share/libalpm/scripts/02_blend_post_hook.sh
+    done
+
+    echo -e '#!/bin/sh\necho -e "#!/bin/sh\nexit 0" > /usr/share/libalpm/scripts/systemd-hook' >/usr/share/libalpm/scripts/01_blend_post_hook.sh
+
+    chmod 755 /usr/share/libalpm/scripts/*blend*.sh
+
+    for p in 00_blend_pre_hook 01_blend_post_hook.sh 02_blend_post_hook; do
+        when=PostTransaction
+
+        [[ -z "${p##*pre*}" ]] && when=PreTransaction
+cat << EOF > "/usr/share/libalpm/hooks/${p}.hook"
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = *
+[Action]
+Description = blend ${p}
+When = ${when}
+Exec = /usr/share/libalpm/scripts/${p}.sh
+EOF
+    done
+fi
+
+mkdir -p /etc/sudoers.d
+if ! grep -q 'Defaults !fqdn' /etc/sudoers.d/sudoers &>/dev/null; then
+	printf "Defaults !fqdn\n" >> /etc/sudoers.d/sudoers
+fi
+if ! grep -q "\"${_uname}\" ALL = (root) NOPASSWD:ALL" /etc/sudoers.d/sudoers &>/dev/null; then
+	printf "\"%s\" ALL = (root) NOPASSWD:ALL\n" "$_uname" >> /etc/sudoers.d/sudoers
+fi
+if ! grep -q "^${_uname}:" /etc/group; then
+	if ! groupadd --force --gid "$_cgid" "$_uname"; then
+		printf "%s:x:%s:" "$_uname" "$_cgid" >> /etc/group
+	fi
+fi
+useradd --uid "$_cuid" --gid "$_cgid" --shell "/bin/bash" --no-create-home --home "$_uhome" "$_uname" &>/dev/null
+
+fi
+
+touch /.init_blend.lock
+
+echo
+echo "Completed container setup."
+
+while true; do
+    for i in /etc/hosts /etc/localtime /etc/resolv.conf; do
+        cp "/run/host/${i}" / &>/dev/null || :
+    done
+    sleep 5
+done

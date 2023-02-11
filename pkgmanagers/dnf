@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-BLEND_COMMAND="sudo dnf $@" blend enter fedora-rawhide --distro fedora-rawhide
-ret=$?
-
-exit $ret

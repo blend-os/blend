@@ -1,0 +1,110 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="../../node_modules/xterm/css/xterm.css" />
+    <style>
+        html,
+        body,
+        #term {
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #242430;
+        }
+
+        .xterm {
+            padding: 30px !important;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        *::-webkit-scrollbar-track {
+            background-color: rgb(36, 36, 48);
+            border-radius: 10px;
+        }
+
+        *::-webkit-scrollbar {
+            width: 5px;
+            background-color: rgb(36, 36, 48);
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: rgb(61, 61, 74);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body style="height: 100%;">
+    <div id="term" style="height: 100%; width: 100%;"></div>
+    <script>
+        var os = require("os");
+        var pty = require("node-pty");
+        var xterm = require("xterm");
+        var ipc = require("electron").ipcRenderer;
+        var { FitAddon } = require("xterm-addon-fit");
+
+        const fit = new FitAddon();
+
+        var once;
+
+        function create_term() {
+            ipc.removeAllListeners('terminal.reset')
+            ipc.removeAllListeners('terminal.keystroke')
+            ipc.removeAllListeners('terminal.incomingData')
+            ipc.removeAllListeners('title')
+
+            ipc.on("terminal.reset", (event, data) => {
+                document.getElementById('term').innerHTML = ''
+                create_term()
+            });
+
+            var term = new xterm.Terminal({
+                fontSize: 14,
+                experimentalCharAtlas: 'dynamic',
+                theme: {
+                    background: '#242430'
+                }
+            });
+
+            once = true
+
+            term.loadAddon(fit)
+
+            var term_e = document.getElementById('term');
+            term.open(term_e);
+            fit.fit()
+
+            ipc.on("terminal.incomingData", (event, data) => {
+                term.write(data);
+            });
+
+            ipc.on("title", (event, title) => {
+                document.title = title;
+            });
+
+            window.addEventListener('beforeunload', (event) => {
+                term.dispose()
+            })
+
+            window.onresize = function () {
+                fit.fit();
+                term.resize(term.cols, term.rows)
+                ipc.send("terminal.resize", [term.cols, term.rows])
+            };
+
+            term.onData(e => {
+                ipc.send("terminal.keystroke", e);
+            });
+        }
+
+        ipc.on("terminal.reset", (event) => create_term)
+        create_term()
+    </script>
+</body>
+
+</html>

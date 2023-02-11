@@ -1,0 +1,64 @@
+<html>
+
+<head>
+  <title>Settings</title>
+
+  <!-- Import bootstrap v5.0. -->
+  <link href="external/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Import common styling. -->
+  <link href="internal/css/common.css" rel="stylesheet">
+</head>
+
+<body style="height: 100%;">
+  <br>
+  <div class="topnav">
+    <div class="btn-group" role="group" aria-label="Stores">
+      <button class="btn btn-outline-light active shadow-none" id="containers-button"
+        onclick="page('containers')">Containers</button>
+      <button class="btn btn-outline-light shadow-none" id="overlay-button" onclick="page('overlay')">System</button>
+    </div>
+  </div>
+
+  <!-- Import bootstrap JS bundle. -->
+  <script src="external/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const Sortable = require('sortablejs')
+    const child_process = require('child_process')
+    const path = require('path')
+    const fs = require('fs')
+    const ipc = require('electron').ipcRenderer
+
+    let webview = document.createElement("div")
+    webview.style.flexGrow = 1
+    webview.setAttribute("id", "webview")
+    webview.style.marginTop = "70px"
+
+    document.body.appendChild(webview)
+
+    const $ = require("jquery")
+
+    function page(page) {
+      switch (page) {
+        case 'containers':
+          $('#webview').load("pages/containers.html");
+          $('#containers-button').addClass('active')
+          $('#overlay-button').removeClass('active')
+          break;
+        case 'overlay':
+          $('#webview').load("pages/overlay.html");
+          $('#containers-button').removeClass('active')
+          $('#overlay-button').addClass('active')
+          break;
+      }
+    }
+
+    page('containers')
+  </script>
+
+  <!-- Import generic page JS. -->
+  <script src="internal/js/generic_page.js"></script>
+</body>
+
+</html>

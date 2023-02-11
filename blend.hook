@@ -1,0 +1,22 @@
+#!/bin/bash
+
+run_latehook() {
+    if [[ -f /new_root/blend/states/.load_prev_state ]] && compgen -G "/new_root/blend/states/state+([0-9]).tar.gz" >/dev/null; then
+        rm -rf /new_root/blend/overlay/current
+        mkdir -p /new_root/blend/overlay/current/usr
+        c=0
+        for i in $(compgen -G "/new_root/blend/states/state*.tar.gz"); do
+            n="${i:19:-7}"
+            if [[ "$n" -gt "$c" ]]; then
+                c="$n"
+            fi
+        done
+        tar -xvpzf "/new_root/blend/states/state${c}.tar.gz" -C "/new_root/blend/overlay/current/usr" --numeric-owner &>/dev/null
+        rm -f "/new_root/blend/states/state${c}.tar.gz" "/new_root/blend/states/.load_prev_state"
+    fi
+
+    mkdir -p /new_root/blend/overlay/current/usr /new_root/usr
+    rm -rf /new_root/blend/overlay/workdir
+    mkdir -p /new_root/blend/overlay/workdir
+    mount -t overlay overlay -o 'lowerdir=/new_root/usr,upperdir=/new_root/blend/overlay/current/usr,workdir=/new_root/blend/overlay/workdir' /new_root/usr -o index=off
+}

@@ -1,5 +1,2 @@
-/debian/*.debhelper
-/debian/*.substvars
-/debian/debhelper-build-stamp
-/debian/blend
-/debian/files
+/blend-settings/node_modules
+/blend-settings/package-lock.json

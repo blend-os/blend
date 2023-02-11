@@ -35,6 +35,7 @@
     "linux": {
       "target": ["tar.gz"],
       "category": "System",
+      "icon": "icons/png",
       "maintainer": "Rudra Saraswat"
     }
   }

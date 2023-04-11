@@ -107,7 +107,7 @@ def check_container(name):
     _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
         '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
     for container in _list.splitlines(keepends=False):
-        if 'blend' in container.split(':')[1] and name.strip() == container.split(':')[0]:
+        if ('blend' in container.split(':')[1] or 'distrobox' in container.split(':')[1]) and name.strip() == container.split(':')[0]:
                 return True
     return False
 

@@ -4,6 +4,9 @@ const pty = require("node-pty");
 
 var mainWindow, terminalWindow, ptyProcess
 
+app.commandLine.appendSwitch('enable-transparent-visuals');
+app.disableHardwareAcceleration();
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     minWidth: 1000,
@@ -138,7 +141,9 @@ function loadTerminalWindow(title, cmd) {
 app.whenReady().then(() => {
   app.allowRendererProcessReuse = false
 
-  createWindow()
+  setTimeout(() => {
+    createWindow();
+  }, 1000);
   createTerminalWindow()
 
   ipcMain.on('create-term', (event, data) => {

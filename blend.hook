@@ -15,8 +15,16 @@ run_latehook() {
         rm -f "/new_root/blend/states/state${c}.tar.gz" "/new_root/blend/states/.load_prev_state"
     fi
 
-    mkdir -p /new_root/blend/overlay/current/usr /new_root/usr
-    rm -rf /new_root/blend/overlay/workdir
-    mkdir -p /new_root/blend/overlay/workdir
-    mount -t overlay overlay -o 'lowerdir=/new_root/usr,upperdir=/new_root/blend/overlay/current/usr,workdir=/new_root/blend/overlay/workdir' /new_root/usr -o index=off
+    mkdir -p /new_root/blend/overlay/current/usr/bin \
+             /new_root/blend/overlay/current/usr/sbin \
+             /new_root/blend/overlay/current/usr/share/plymouth
+
+    mkdir -p /new_root/usr/bin \
+             /new_root/usr/sbin \
+             /new_root/usr/share/plymouth
+    rm -rf /new_root/blend/overlay/workdir_1 /new_root/blend/overlay/workdir_2 /new_root/blend/overlay/workdir_3
+    mkdir -p /new_root/blend/overlay/workdir_1 /new_root/blend/overlay/workdir_2 /new_root/blend/overlay/workdir_3
+    mount -t overlay overlay -o 'lowerdir=/new_root/usr/bin,upperdir=/new_root/blend/overlay/current/usr/bin,workdir=/new_root/blend/overlay/workdir_1' /new_root/usr/bin -o index=off
+    mount -t overlay overlay -o 'lowerdir=/new_root/usr/sbin,upperdir=/new_root/blend/overlay/current/usr/sbin,workdir=/new_root/blend/overlay/workdir_2' /new_root/usr/sbin -o index=off
+    mount -t overlay overlay -o 'lowerdir=/new_root/usr/share/plymouth,upperdir=/new_root/blend/overlay/current/usr/share/plymouth,workdir=/new_root/blend/overlay/workdir_3' /new_root/usr/share/plymouth -o index=off
 }

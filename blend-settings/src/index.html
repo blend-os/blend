@@ -14,9 +14,11 @@
   <br>
   <div class="topnav">
     <div class="btn-group" role="group" aria-label="Stores">
-      <button class="btn btn-outline-light active shadow-none" id="containers-button"
-        onclick="page('containers')">Containers</button>
-      <button class="btn btn-outline-light shadow-none" id="overlay-button" onclick="page('overlay')">System</button>
+      <button class="btn btn-outline-light active shadow-none" id="containers-button" onclick="page('containers')">Linux
+        Containers</button>
+      <button class="btn btn-outline-light shadow-none" id="android-button" onclick="page('android')">Android
+        Apps</button>
+      <button class="btn btn-outline-light shadow-none" id="system-button" onclick="page('system')">System</button>
     </div>
   </div>
 
@@ -44,12 +46,20 @@
         case 'containers':
           $('#webview').load("pages/containers.html");
           $('#containers-button').addClass('active')
-          $('#overlay-button').removeClass('active')
+          $('#android-button').removeClass('active')
+          $('#system-button').removeClass('active')
           break;
-        case 'overlay':
-          $('#webview').load("pages/overlay.html");
+        case 'android':
+          $('#webview').load("pages/android.html");
           $('#containers-button').removeClass('active')
-          $('#overlay-button').addClass('active')
+          $('#android-button').addClass('active')
+          $('#system-button').removeClass('active')
+          break;
+        case 'system':
+          $('#webview').load("pages/system.html");
+          $('#containers-button').removeClass('active')
+          $('#android-button').removeClass('active')
+          $('#system-button').addClass('active')
           break;
       }
     }

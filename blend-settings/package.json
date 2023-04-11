@@ -9,6 +9,7 @@
   "scripts": {
     "start": "electron .",
     "icons": "electron-icon-maker --input=./static/icon.png --output=./build/",
+    "electron-builder": "electron-builder",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

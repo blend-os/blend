@@ -87,19 +87,6 @@ def current_state():
                 _state = int(s[5:-7])
     return _state
 
-def load_overlay():
-    if os.path.isfile('/blend/states/.load_prev_state') and os.path.isfile(f'/blend/states/state{current_state()}.tar.gz'):
-        load_prev_state()
-        os.remove('/blend/states/.load_prev_state')
-    subprocess.call(['mkdir', '-p', '/blend/overlay/current/usr'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['rm', '-rf', '/blend/overlay/workdir'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['mkdir', '-p', '/blend/overlay/workdir'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['touch', '/blend/overlay/current/usr/.blend_overlay'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['chattr', '+i', '/blend/overlay/current/usr/.blend_overlay'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['mount', '-t', 'overlay', 'overlay', '-o', 'rw,lowerdir=/usr,upperdir=/blend/overlay/current/usr,workdir=/blend/overlay/workdir',
-                         '/usr', '-o', 'index=off'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    info('mounted overlay')
-
 def save_state():
     subprocess.call(['mkdir', '-p', '/blend/states'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     state = current_state() + 1

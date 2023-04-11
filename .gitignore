@@ -1,3 +1,4 @@
-/blend-settings/node_modules
-/blend-settings/package-lock.json
+/blend-settings/node_modules/
 /blend-settings/build/
+/blend-settings/dist/
+/blend-settings/package-lock.json

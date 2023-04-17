@@ -1,12 +1,12 @@
 <div class="container-fluid d-flex justify-content-center">
   <div class="col-12 col-lg-10 col-xl-8 mx-auto">
     <div id="waydroid-initialize-settings">
-      <div class="list-group mt-3 mb-5 shadow" id="waydroid-initialize-settings">
-        <div class="list-group-item">
+      <div class="list-group mt-3 mb-5" id="waydroid-initialize-settings">
+        <div class="list-group-item shadow">
           <div class="row align-items-center">
             <div class="col">
-              <strong class="mb-0">Initialize Android App Support</strong>
-              <p class="text-muted mb-0">Initialize WayDroid to be able to run Android apps.</p>
+              <strong class="mb-0">Initialize Android app support</strong>
+              <p class="text-muted mb-0">You may be asked to enter your password repeatedly to initialize WayDroid.</p>
             </div>
             <div class="col-auto">
               <div class="form-check form-switch align-middle">
@@ -16,57 +16,34 @@
             </div>
           </div>
         </div>
+        <br>
+        <p id="nvidia-warning" class="d-none">Since you're using an <b style="color: lightgreen;">NVIDIA</b> GPU,
+          Android apps will use software rendering.</p>
+        <p>After initializing WayDroid, you can install a store (or many) of your choice.</p>
       </div>
     </div>
     <div class="d-none" id="waydroid-initialized-settings">
-      <div id="main-list" class="mb-3">
-        <div class="list-group-item" id="">
-          <div class="row align-items-center">
-            <div class="col">
-              <strong class="mb-0">App Lounge (/e/)</strong>
-              <p class="text-muted mb-0">An installable catalogue of FOSS Android applications.</p>
-            </div>
-            <div class="col-auto">
-              <div class="form-check form-switch align-middle">
-                <button type="button" id="e-applounge-inst-btn" onclick="install_e_applounge()" class="btn btn-primary"
-                  disabled>Checking status...</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <p>Android app support (WayDroid) has successfully been initialized.<span id="nvidia-warning-installed"
+          class="d-none"> Since you're using an <b style="color: lightgreen;">NVIDIA</b> GPU, apps will use software
+          rendering.</span></p>
       <strong>Install a store</strong>
       <div class="list-group mt-3 mb-4 shadow">
         <div>
-          <div class="list-group-item" id="multi-window">
+          <div class="list-group-item" id="aurora-store-item">
             <div class="row align-items-center">
               <div class="col">
-                <strong class="mb-0">App Lounge (/e/)</strong>
-                <p class="text-muted mb-0">An installable catalogue of FOSS Android applications.</p>
-              </div>
-              <div class="col-auto">
-                <div class="form-check form-switch align-middle">
-                  <button type="button" id="e-applounge-inst-btn" onclick="install_e_applounge()"
-                    class="btn btn-primary" disabled>Checking status...</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="list-group-item" id="multi-window">
-            <div class="row align-items-center">
-              <div class="col">
-                <strong class="mb-0">Aurora Store (Nightly)</strong>
+                <strong class="mb-0">Aurora Store</strong>
                 <p class="text-muted mb-0">An open-source Google Play Store client.</p>
               </div>
               <div class="col-auto">
                 <div class="form-check form-switch align-middle">
-                  <button type="button" id="aurora-store-inst-btn" onclick="install_aurora_store()"
-                    class="btn btn-primary" disabled>Checking status...</button>
+                  <button type="button" id="aurora-store-btn" onclick="install_aurora_store()"
+                    class="btn btn-success" disabled>Checking status...</button>
                 </div>
               </div>
             </div>
           </div>
-          <div class="list-group-item" id="multi-window">
+          <div class="list-group-item" id="f-droid-item">
             <div class="row align-items-center">
               <div class="col">
                 <strong class="mb-0">F-Droid</strong>
@@ -74,14 +51,19 @@
               </div>
               <div class="col-auto">
                 <div class="form-check form-switch align-middle">
-                  <button type="button" id="f-droid-btn" onclick="install_f_droid()" class="btn btn-primary"
-                    disabled>Checking status...</button>
+                  <button type="button" id="f-droid-btn" onclick="install_f_droid()"
+                    class="btn btn-primary" disabled>Checking status...</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <button type="button" id="f-droid-btn" onclick="waydroid_open_settings()"
+        class="btn btn-primary">Open Settings</button>
+      <br><br>
+      <strong>Useful information</strong>
+      <p>In the event that an app you regularly use on your phone is broken on blendOS, you could install MicroG from F-Droid by following the instructions <a href="javascript:void()" onclick="require('electron').shell.openExternal('https://microg.org/download.html')">here</a>.</p>
     </div>
   </div>
 </div>

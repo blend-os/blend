@@ -99,7 +99,7 @@ def autosave_state():
     while True:
         if not os.path.isfile('/blend/states/.disable_states'):
             save_state()
-        time.sleep(6*60*60) # XXX: make this configurable
+        time.sleep(12*60*60) # XXX: make this configurable
 
 def toggle_states():
     if os.path.isfile('/blend/states/.disable_states'):
@@ -125,7 +125,6 @@ description = f'''
 {colors.bold}{colors.fg.purple}available commands{colors.reset}:
   {colors.bold}help{colors.reset}                  Show this help message and exit.
   {colors.bold}version{colors.reset}               Show version information and exit.
-  {colors.bold}load-overlay{colors.reset}          Load the current overlay.
   {colors.bold}save-state{colors.reset}            Save the current state (backup).
   {colors.bold}toggle-states{colors.reset}         Enable/disable automatic state creation (you can still manually save states).
   {colors.bold}rollback{colors.reset}              Rollback to previous state.
@@ -142,7 +141,6 @@ parser = argparse.ArgumentParser(description=description, usage=argparse.SUPPRES
                                  epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
 command_map = { 'help': 'help',
                 'version': 'version',
-                'load-overlay': load_overlay,
                 'save-state': save_state,
                 'toggle-states': toggle_states,
                 'autosave-state': autosave_state,

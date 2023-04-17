@@ -13,10 +13,10 @@
 <body style="height: 100%;">
   <br>
   <div class="topnav">
-    <div class="btn-group" role="group" aria-label="Stores">
+    <div class="btn-group" id="settings-tabs" role="group" aria-label="Stores">
       <button class="btn btn-outline-light active shadow-none" id="containers-button" onclick="page('containers')">Linux
         Containers</button>
-      <button class="btn btn-outline-light shadow-none" id="android-button" onclick="page('android')">Android
+      <button class="btn btn-outline-light shadow-none d-none" id="android-button" onclick="page('android')">Android
         Apps</button>
       <button class="btn btn-outline-light shadow-none" id="system-button" onclick="page('system')">System</button>
     </div>
@@ -40,6 +40,10 @@
     document.body.appendChild(webview)
 
     const $ = require("jquery")
+
+    if (fs.existsSync('/usr/bin/waydroid')) {
+      document.getElementById('android-button').classList.remove('d-none')
+    }
 
     function page(page) {
       switch (page) {

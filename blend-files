@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 
-import os, sys, yaml, time, getpass, shutil, fileinput, subprocess
+import os
+import sys
+import yaml
+import time
+import getpass
+import shutil
+import fileinput
+import subprocess
+
 
 def get_containers():
-    container_list = subprocess.run(['sudo', '-u', user, 'podman', 'ps', '-a', '--no-trunc', '--size', '--sort=created', '--format',
+    container_list = subprocess.run(['sudo', '-u', user, 'podman', 'ps', '-a', '--no-trunc', '--sort=created', '--format',
                                      '{{.Names}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip().split('\n')
 
     try:
@@ -22,6 +30,7 @@ def get_containers():
     except:
         return container_list
 
+
 def list_use_container_bin():
     try:
         with open(os.path.expanduser('~/.config/blend/config.yaml')) as config_file:
@@ -30,22 +39,24 @@ def list_use_container_bin():
     except:
         return []
 
+
 def check_if_present(attr, desktop_str):
     for l in desktop_str:
         if l.startswith(attr + '='):
             return True
     return False
 
+
 def which(bin):
     results = []
     for dir in os.environ.get('PATH').split(':'):
         if os.path.isdir(dir):
-            for i in os.listdir(dir):
-                if os.path.basename(bin) == i:
-                    results.append(os.path.join(dir, i))
+            if os.path.basename(bin) in os.listdir(dir):
+                results.append(os.path.join(dir, os.path.basename(bin)))
     if results == []:
         return None
     return results
+
 
 def create_container_binaries():
     _binaries = []
@@ -54,17 +65,18 @@ def create_container_binaries():
     for c in _list:
         c = c.strip()
         for i in con_get_output(c, '''find /usr/bin -type f -printf "%P\n" 2>/dev/null;
-                                      find /usr/local/bin -type f -printf "%P\n" 2>/dev/null;
-                                      find /usr/sbin -type f -printf "%P\n" 2>/dev/null;''').split('\n'):
+                                      find /usr/local/bin -type f -printf "%P\n" 2>/dev/null;''').split('\n'):
             i = i.strip()
-            os.makedirs(os.path.expanduser(f'~/.local/bin/blend_{c}'), exist_ok=True)
+            os.makedirs(os.path.expanduser(
+                f'~/.local/bin/blend_{c}'), exist_ok=True)
             i_present = False
             orig_which_out = which(os.path.basename(i))
             which_out = None
             if orig_which_out != None:
                 which_out = orig_which_out.copy()
                 try:
-                    which_out.remove(os.path.expanduser(f'~/.local/bin/blend_bin/{os.path.basename(i)}'))
+                    which_out.remove(os.path.expanduser(
+                        f'~/.local/bin/blend_bin/{os.path.basename(i)}'))
                 except ValueError:
                     pass
                 if which_out == []:
@@ -74,13 +86,17 @@ def create_container_binaries():
 
             if os.path.basename(i) != 'host-spawn' and i != '' and not i_present:
                 with open(os.path.expanduser(f'~/.local/bin/blend_{c}/{os.path.basename(i)}.tmp'), 'w') as f:
-                    f.write('#!/bin/sh\n')
-                    f.write(f'# blend container: {i}\n')
+                    f.write('#!/bin/bash\n')
+                    f.write(f'# blend container: {c};{i}\n')
                     if os.path.basename(i) in _exceptions:
                         f.write(f'# EXCEPTION\n')
-                    f.write(f'BLEND_ALLOW_ROOT= BLEND_NO_CHECK= blend enter -cn {c} -- {i} "$@"\n')
+                    f.write('[ -f /run/.containerenv ] && { if [[ -e "/usr/bin/' + os.path.basename(i) + '" ]] || [[ -e "/usr/local/bin/' + os.path.basename(i) + '" ]]; then if [[ -e "/usr/bin/' + os.path.basename(i) + '"  ]]; then /usr/bin/' + os.path.basename(
+                        i) + ' "$@"; elif [[ -e "/usr/local/bin/' + os.path.basename(i) + '" ]]; then /usr/local/bin/' + os.path.basename(i) + ' "$@"; fi; exit $?; else echo "This command can be accessed from the host, or from the container \'' + c + '\'."; exit 127; fi } || :\n')
+                    f.write(
+                        f'BLEND_ALLOW_ROOT= BLEND_NO_CHECK= blend enter -cn {c} -- {os.path.basename(i)} "$@"\n')
                 # XXX: make this bit fully atomic
-                os.chmod(os.path.expanduser(f'~/.local/bin/blend_{c}/{os.path.basename(i)}.tmp'), 0o775)
+                os.chmod(os.path.expanduser(
+                    f'~/.local/bin/blend_{c}/{os.path.basename(i)}.tmp'), 0o775)
                 subprocess.call(['mv', os.path.expanduser(f'~/.local/bin/blend_{c}/{os.path.basename(i)}.tmp'),
                                  os.path.expanduser(f'~/.local/bin/blend_{c}/{os.path.basename(i)}')])
                 _binaries.append((c, os.path.basename(os.path.basename(i))))
@@ -89,11 +105,15 @@ def create_container_binaries():
 
     for c, i in _binaries:
         try:
-            os.symlink(os.path.expanduser(f'~/.local/bin/blend_{c}/{i}'), os.path.expanduser(f'~/.local/bin/blend_bin/{i}'))
+            if i == 'apt':
+                print(c, i)
+            os.symlink(os.path.expanduser(
+                f'~/.local/bin/blend_{c}/{i}'), os.path.expanduser(f'~/.local/bin/blend_bin/{i}'))
         except FileExistsError:
-            if not subprocess.call(['grep', '-q', f'^# container: {c}$', os.path.expanduser(f'~/.local/bin/blend_bin/{i}')]):
+            if subprocess.call(['grep', '-q', f'^# container: {c};{i}$', os.path.expanduser(f'~/.local/bin/blend_bin/{i}')], shell=False):
                 os.remove(os.path.expanduser(f'~/.local/bin/blend_bin/{i}'))
-                os.symlink(os.path.expanduser(f'~/.local/bin/blend_{c}/{i}'), os.path.expanduser(f'~/.local/bin/blend_bin/{i}'))
+                os.symlink(os.path.expanduser(
+                    f'~/.local/bin/blend_{c}/{i}'), os.path.expanduser(f'~/.local/bin/blend_bin/{i}'))
 
     for i in remove_binaries:
         try:
@@ -103,12 +123,15 @@ def create_container_binaries():
 
     for b in os.listdir(os.path.expanduser(f'~/.local/bin/blend_bin')):
         if [_b for _b in _binaries if _b[1] == b] == []:
-            os.remove(os.path.join(os.path.expanduser(f'~/.local/bin/blend_bin'), b))
+            os.remove(os.path.join(os.path.expanduser(
+                f'~/.local/bin/blend_bin'), b))
+
 
 def create_container_applications():
     _apps = []
 
-    os.makedirs(os.path.expanduser(f'~/.local/share/applications'), exist_ok=True)
+    os.makedirs(os.path.expanduser(
+        f'~/.local/share/applications'), exist_ok=True)
 
     for c in _list:
         c = c.strip()
@@ -116,11 +139,13 @@ def create_container_applications():
             orig_path = i.strip()
             i = os.path.basename(orig_path)
             i_present = (os.path.isfile(f'/usr/share/applications/{i}') or os.path.isfile(f'/usr/local/share/applications/{i}')
-                          or os.path.isfile(os.path.expanduser(f'~/.local/share/applications/{i}')))
+                         or os.path.isfile(os.path.expanduser(f'~/.local/share/applications/{i}')))
             if i != '' and not i_present:
                 with open(os.path.expanduser(f'~/.local/share/applications/blend;{i}'), 'w') as f:
-                    _ = con_get_output(c, f"sudo sed -i '/^DBusActivatable=/d' {orig_path}")
-                    _ = con_get_output(c, f"sudo sed -i '/^TryExec=/d' {orig_path}")
+                    _ = con_get_output(
+                        c, f"sudo sed -i '/^DBusActivatable=/d' {orig_path}")
+                    _ = con_get_output(
+                        c, f"sudo sed -i '/^TryExec=/d' {orig_path}")
                     contents = con_get_output(c, f'cat {orig_path}')
                     f.write(contents)
                 for line in fileinput.input(os.path.expanduser(f'~/.local/share/applications/blend;{i}'), inplace=True):
@@ -129,16 +154,19 @@ def create_container_applications():
                     elif line.strip().startswith('Icon='):
                         if '/' in line:
                             line = line.strip()
-                            _ = con_get_output(c, f"mkdir -p ~/.local/share/blend/icons/file/\"{c}_{i}\"; cp {line[5:]} ~/.local/share/blend/icons/file/\"{c}_{i}\"")
+                            _ = con_get_output(
+                                c, f"mkdir -p ~/.local/share/blend/icons/file/\"{c}_{i}\"; cp {line[5:]} ~/.local/share/blend/icons/file/\"{c}_{i}\"")
                             line = f'Icon={os.path.expanduser("~/.local/share/blend/icons/file/" + c + "_" + i + "/" + os.path.basename(line[5:]))}\n'
                         else:
                             line = line.strip()
                             icons = con_get_output(c, f'''find /usr/share/icons /usr/share/pixmaps /var/lib/flatpak/exports/share/icons \\
                                                             -type f -iname "*{line[5:]}*" 2> /dev/null | sort''').split('\r\n')
-                            _ = con_get_output(c, f"mkdir -p ~/.local/share/blend/icons/\"{c}_{i}\"; cp {icons[0]} ~/.local/share/blend/icons/\"{c}_{i}\"")
+                            _ = con_get_output(
+                                c, f"mkdir -p ~/.local/share/blend/icons/\"{c}_{i}\"; cp {icons[0]} ~/.local/share/blend/icons/\"{c}_{i}\"")
                             line = f'Icon={os.path.expanduser("~/.local/share/blend/icons/" + c + "_" + i + "/" + os.path.basename(icons[0]))}\n'
                     sys.stdout.write(line)
-                os.chmod(os.path.expanduser(f'~/.local/share/applications/blend;{i}'), 0o775)
+                os.chmod(os.path.expanduser(
+                    f'~/.local/share/applications/blend;{i}'), 0o775)
                 _apps.append((c, i))
                 del _
 
@@ -146,7 +174,9 @@ def create_container_applications():
         if a.startswith('blend;'):
             a = a.removeprefix('blend;')
             if [_a for _a in _apps if _a[1] == a] == []:
-                os.remove(os.path.expanduser(f'~/.local/share/applications/blend;{a}'))
+                os.remove(os.path.expanduser(
+                    f'~/.local/share/applications/blend;{a}'))
+
 
 def create_container_sessions(type='xsessions'):
     session_dir = f'/usr/share/{type}'
@@ -176,25 +206,19 @@ def create_container_sessions(type='xsessions'):
                         continue
 
                     sys.stdout.write(line)
-                os.chmod(os.path.expanduser(f'{session_dir}/blend-{c};{i}'), 0o775)
+                os.chmod(os.path.expanduser(
+                    f'{session_dir}/blend-{c};{i}'), 0o775)
 
-con_get_output = lambda name, cmd: subprocess.run(['sudo', '-u', user, 'podman', 'exec', '--user', getpass.getuser(), '-it', name, 'bash', '-c', cmd],
-                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
+
+def con_get_output(name, cmd): return subprocess.run(['sudo', '-u', user, 'podman', 'exec', '--user', getpass.getuser(), '-it', name, 'bash', '-c', cmd],
+                                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
+
 
 user = getpass.getuser()
 
 try:
     user = sys.argv[2]
 except:
-    pass
-
-try:
-    if sys.argv[1] == 'sessions':
-        _list = get_containers()
-        create_container_sessions(type='xsessions')
-        create_container_sessions(type='wayland-sessions')
-        exit(0)
-except IndexError:
     pass
 
 for c in get_containers():
@@ -207,4 +231,4 @@ while True:
 
     create_container_binaries()
     create_container_applications()
-    time.sleep(6)
+    time.sleep(15)

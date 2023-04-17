@@ -80,6 +80,10 @@
             fit.fit()
 
             ipc.on("terminal.incomingData", (event, data) => {
+                fit.fit();
+                term.resize(term.cols, term.rows)
+                ipc.send("terminal.resize", [term.cols, term.rows])
+
                 term.write(data);
             });
 

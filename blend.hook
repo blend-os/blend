@@ -17,14 +17,14 @@ run_latehook() {
 
     mkdir -p /new_root/blend/overlay/current/usr/bin \
              /new_root/blend/overlay/current/usr/sbin \
-             /new_root/blend/overlay/current/usr/share/plymouth
+             /new_root/blend/overlay/current/usr/share
 
     mkdir -p /new_root/usr/bin \
              /new_root/usr/sbin \
-             /new_root/usr/share/plymouth
+             /new_root/usr/share
     rm -rf /new_root/blend/overlay/workdir_1 /new_root/blend/overlay/workdir_2 /new_root/blend/overlay/workdir_3
     mkdir -p /new_root/blend/overlay/workdir_1 /new_root/blend/overlay/workdir_2 /new_root/blend/overlay/workdir_3
     mount -t overlay overlay -o 'lowerdir=/new_root/usr/bin,upperdir=/new_root/blend/overlay/current/usr/bin,workdir=/new_root/blend/overlay/workdir_1' /new_root/usr/bin -o index=off
     mount -t overlay overlay -o 'lowerdir=/new_root/usr/sbin,upperdir=/new_root/blend/overlay/current/usr/sbin,workdir=/new_root/blend/overlay/workdir_2' /new_root/usr/sbin -o index=off
-    mount -t overlay overlay -o 'lowerdir=/new_root/usr/share/plymouth,upperdir=/new_root/blend/overlay/current/usr/share/plymouth,workdir=/new_root/blend/overlay/workdir_3' /new_root/usr/share/plymouth -o index=off
+    mount -t overlay overlay -o 'lowerdir=/new_root/usr/share,upperdir=/new_root/blend/overlay/current/usr/share,workdir=/new_root/blend/overlay/workdir_3' /new_root/usr/share -o index=off
 }

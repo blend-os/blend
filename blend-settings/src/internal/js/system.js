@@ -47,6 +47,8 @@ function undo_rollback() {
 }
 
 function save_state() {
+    $("#settings-tabs").find("*").prop('disabled', true)
+
     let save_state_worker = new Worker(
         `data:text/javascript,
         let s = require('child_process').spawnSync('pkexec', ['blend-system', 'save-state']).status
@@ -61,11 +63,13 @@ function save_state() {
         if (e.data == 'success') {
             document.getElementById('save-state-btn').outerHTML =
                 '<button type="button" class="btn btn-success" id="save-state-btn" disabled>Saved state</button>'
+            $("#settings-tabs").find("*").prop('disabled', false)
             setTimeout(() => document.getElementById('save-state-btn').outerHTML =
                 '<button type="button" id="save-state-btn" onclick="save_state()" class="btn btn-success">Save state</button>', 2000)
         } else {
             document.getElementById('save-state-btn').outerHTML =
                 '<button type="button" class="btn btn-success" id="save-state-btn" disabled>Failed</button>'
+            $("#settings-tabs").find("*").prop('disabled', false)
             setTimeout(() => document.getElementById('save-state-btn').outerHTML =
                 '<button type="button" id="save-state-btn" onclick="save_state()" class="btn btn-success">Save state</button>', 2000)
         }

@@ -7,13 +7,12 @@
         <div class="row align-items-center">
           <div class="col">
             <strong class="mb-0">Disable automatic state creation</strong>
-            <p class="text-muted mb-0">blendOS creates copies of apps and config every 6 hours (and keeps the
-              last two).</p>
+            <p class="text-muted mb-0">blendOS creates copies of apps and config every 12 hours (and keeps the
+              previous one).</p>
           </div>
           <div class="col-auto">
             <div class="form-check form-switch align-middle">
-              <input class="form-check-input align-middle" type="checkbox" role="switch"
-                id="automatic-state-toggle">
+              <input class="form-check-input align-middle" type="checkbox" role="switch" id="automatic-state-toggle">
             </div>
           </div>
         </div>
@@ -26,7 +25,8 @@
           </div>
           <div class="col-auto">
             <div class="form-check form-switch align-middle">
-              <button type="button" id="save-state-btn" onclick="save_state()" class="btn btn-success">Save state</button>
+              <button type="button" id="save-state-btn" onclick="save_state()" class="btn btn-success">Save
+                state</button>
             </div>
           </div>
         </div>

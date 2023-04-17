@@ -111,7 +111,7 @@ def check_container(name):
                 return True
     return False
 
-def check_container_status(name):
+def check_container_status(name):   
     return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
 
 def core_start_container(name):
@@ -128,7 +128,7 @@ def core_start_container(name):
     logproc = pexpect.spawn('podman', args=['logs', '-f', '--since', str(start_time), name], timeout=300)
     logproc.logfile_read = sys.stdout.buffer
 
-    logproc.expect('Completed container setup')
+    logproc.expect('Completed container setup.')
     logproc.terminate()
 
 def core_create_container():
@@ -188,11 +188,6 @@ def core_create_container():
         exit(1)
 
     core_start_container(name)
-
-    if distro == 'arch':
-        core_run_container('sudo pacman -Sy')
-        core_run_container('sudo pacman --noconfirm -Syu --needed git base-devel')
-        core_run_container('TEMP_DIR="$(mktemp -d)"; cd "${TEMP_DIR}"; git clone https://aur.archlinux.org/yay.git; cd yay; makepkg --noconfirm -si; rm -rf "${TEMP_DIR}"')
 
 core_get_output = lambda cmd: subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
 
@@ -399,57 +394,11 @@ if os.geteuid() == 0 and os.environ['BLEND_ALLOW_ROOT'] == None:
     exit(1)
 
 description = f'''
-{colors.bold}{colors.fg.purple}Usage:{colors.reset}
-  blend [command] [options] [arguments]
-
 {colors.bold}{colors.fg.purple}Version:{colors.reset} {__version}{colors.bold}
 
-{colors.bold}{colors.bg.purple}blend{colors.reset}{colors.bold} is a package manager for {colors.bg.purple}blendOS{colors.reset}{colors.bold}, which includes support for Arch, Ubuntu and Fedora packages.{colors.reset}
+Use the 'blendOS Settings' app to create and manage Linux containers, Android apps and immutability configuration.
 
-{colors.bold}{colors.fg.purple}default distro{colors.reset}: {colors.bold}{colors.fg.lightblue}arch{colors.reset} (default container's name is the same as that of the default distro)
-
-Here's a list of the supported distros:
-{colors.bold}1.{colors.reset} arch
-{colors.bold}2.{colors.reset} fedora-rawhide
-{colors.bold}3.{colors.reset} ubuntu-22.04
-{colors.bold}4.{colors.reset} ubuntu-22.10
-(debian support is coming soon)
-
-You can use any of these distros by passing the option {colors.bold}--distro=[NAME OF THE DISTRO]{colors.reset}.
-
-You can even install a supported desktop environment in a blend container (run `blend install-de [DESKTOP ENVIRONMENT NAME]` to install your favorite desktop environment).
-
-However, this feature is still somewhat experimental, and some apps might be buggy.
-
-Here's a list of the supported desktop environments:
-{colors.bold}1.{colors.reset} gnome
-{colors.bold}2.{colors.reset} mate
-(support for many more DEs is coming soon)
-
-{colors.bold}{colors.fg.lightblue}arch{colors.reset} also supports AUR packages, for an extremely large app catalog.
-
-{colors.bold}{colors.fg.purple}available commands{colors.reset}:
-  {colors.bold}help{colors.reset}                  Show this help message and exit.
-  {colors.bold}version{colors.reset}               Show version information and exit.
-  {colors.bold}enter{colors.reset}                 Enter the container shell.
-  {colors.bold}install{colors.reset}               Install packages inside a container.
-  {colors.bold}remove{colors.reset}                Remove packages inside a managed container.
-  {colors.bold}create-container{colors.reset}      Create a container managed by blend.
-  {colors.bold}remove-container{colors.reset}      Remove a container managed by blend.
-  {colors.bold}list-containers{colors.reset}       List all the containers managed by blend.
-  {colors.bold}start-containers{colors.reset}      Start all the container managed by blend.
-  {colors.bold}sync{colors.reset}                  Sync list of available packages from repository.
-  {colors.bold}search{colors.reset}                Search for packages in a managed container.
-  {colors.bold}show{colors.reset}                  Show details about a package.
-  {colors.bold}update{colors.reset}                Update all the packages in a managed container.
-
-{colors.bold}{colors.fg.purple}options for commands{colors.reset}:
-  {colors.bold}-cn CONTAINER NAME, --container-name CONTAINER NAME{colors.reset}
-                        set the container name (the default is the name of the distro)
-  {colors.bold}-d DISTRO, --distro DISTRO{colors.reset}
-                        set the distro name (supported: arch fedora-rawhide ubuntu-22.04 ubuntu-22.10; default is arch)
-  {colors.bold}-y, --noconfirm{colors.reset}       assume yes for all questions
-  {colors.bold}-v, --version{colors.reset}         show version information and exit
+You can install and submit web apps from the Web Store.
 '''
 
 epilog = f'''
@@ -458,17 +407,13 @@ epilog = f'''
 
 parser = argparse.ArgumentParser(description=description, usage=argparse.SUPPRESS,
                                  epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
-command_map = { 'install': install_blend,
-                'remove': remove_blend,
-                'enter': enter_container,
+command_map = { 'enter': enter_container,
+                'exec': enter_container,
                 'create-container': core_create_container,
                 'remove-container': remove_container,
                 'list-containers': list_containers,
                 'start-containers': start_containers,
                 'sync': sync_blends,
-                'update': update_blends,
-                'search': search_blend,
-                'show': show_blend,
                 'help': 'help',
                 'version': 'version' }
 parser.add_argument('command', choices=command_map.keys(), help=argparse.SUPPRESS)

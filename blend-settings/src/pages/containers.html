@@ -1,8 +1,8 @@
 <div class="container-fluid d-flex justify-content-center">
   <div class="col-12 col-lg-10 col-xl-8 mx-auto">
     <strong class="mb-0">Containers</strong>
-    <p>You can install any app from any of the supported distributions (Arch, Fedora, and Ubuntu). Any apps you install in them will appear as regular applications on your system, and so will any binaries. In case a binary is common between two containers, the binary from the most recently created container will be exported. You can override this by rearranging (dragging) the containers below to select the priority that should be assigned to each container.</p>
-    <div class="list-group mb-5 shadow" id="container-list">
+    <p>You can install any app from any of the supported distributions (<b>Arch</b>, <b>Fedora</b>, and <b>Ubuntu</b>). Apps you install will appear as regular applications on your system (as well as binaries and package managers). You can override the priority in which common binaries are made available on the system by rearranging (dragging) the containers below to select the priority that should be assigned to each container.</p>
+    <div class="list-group mb-4 shadow" id="container-list">
       <div class="list-group-item">
         <div class="row align-items-center">
           <div class="col">
@@ -18,6 +18,7 @@
 <div class="container-fluid d-flex justify-content-center">
   <div class="col-12 col-lg-10 col-xl-8 mx-auto">
     <strong class="mb-0">Create new container</strong>
+    <p>Create a container for each distribution to be able to use their package managers and other binaries directly from a terminal.</p>
     <form onsubmit="create_container(); return false">
       <div class="form-group row">
         <label for="inputContainerName" class="col-sm-3 col-form-label">Container name</label>

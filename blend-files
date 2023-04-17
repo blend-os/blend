@@ -4,8 +4,8 @@ import os
 import sys
 import yaml
 import time
+import glob
 import getpass
-import shutil
 import fileinput
 import subprocess
 
@@ -105,8 +105,6 @@ def create_container_binaries():
 
     for c, i in _binaries:
         try:
-            if i == 'apt':
-                print(c, i)
             os.symlink(os.path.expanduser(
                 f'~/.local/bin/blend_{c}/{i}'), os.path.expanduser(f'~/.local/bin/blend_bin/{i}'))
         except FileExistsError:
@@ -125,6 +123,10 @@ def create_container_binaries():
         if [_b for _b in _binaries if _b[1] == b] == []:
             os.remove(os.path.join(os.path.expanduser(
                 f'~/.local/bin/blend_bin'), b))
+
+    for b_dir in glob.glob(os.path.expanduser(f'~/.local/bin/blend_*')):
+        if os.path.basename(b_dir) != 'blend_bin' and os.path.basename(b_dir)[6:] not in _list:
+            subprocess.call(['rm', '-rf', b_dir], shell=False)
 
 
 def create_container_applications():

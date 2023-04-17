@@ -7,7 +7,7 @@ This repository also contains **blend-settings**, a tool for configuring blend a
 
 ## Credits
 
-The `init-blend` file in this repository uses a few lines (the sections have been clearly) uses from distrobox's init script. These lines have been marked and attributed appropriately, and are licensed under [the GPL-3.0 license](https://github.com/89luca89/distrobox/blob/main/COPYING.md).
+The `init-blend` file in this repository uses a few lines (the sections have been marked clearly) uses from distrobox's init script. These lines have been marked and attributed appropriately, and are licensed under [the GPL-3.0 license](https://github.com/89luca89/distrobox/blob/main/COPYING.md).
 
 I would also like to thank Luca Di Maio from Distrobox for NVIDIA driver support in containers.
 

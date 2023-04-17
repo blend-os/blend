@@ -16,7 +16,8 @@ function create_container () {
                               'cmd': `blend create-container -cn ${container_name} -d ${container_distro} \
                                       && echo 'created container successfully (exiting automatically in 5 seconds)' \
                                       || echo 'container creation failed (exiting automatically in 5 seconds)';
-                                      sleep 5` });
+                                      sleep 5` })
+    $('#inputContainerName').val('')
     ipc.on('container-created', () => {
         worker.postMessage('update-list')
     })

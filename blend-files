@@ -233,4 +233,4 @@ while True:
 
     create_container_binaries()
     create_container_applications()
-    time.sleep(15)
+    time.sleep(1)

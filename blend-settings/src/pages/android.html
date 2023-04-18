@@ -23,8 +23,9 @@
       </div>
     </div>
     <div class="d-none" id="waydroid-initialized-settings">
-      <p>Android app support (WayDroid) has successfully been initialized.<span id="nvidia-warning-installed"
-          class="d-none"> Since you're using an <b style="color: lightgreen;">NVIDIA</b> GPU, apps will use software
+      <p>Android app support (WayDroid) has successfully been initialized.<span id="first-time-waydroid" class="d-none"> It's
+          recomended to reboot before using or installing Android apps/stores.</span><span id="nvidia-warning-installed" class="d-none"> Since you're using an <b
+            style="color: lightgreen;">NVIDIA</b> GPU, apps will use software
           rendering.</span></p>
       <strong>Install a store</strong>
       <div class="list-group mt-3 mb-4 shadow">
@@ -37,8 +38,8 @@
               </div>
               <div class="col-auto">
                 <div class="form-check form-switch align-middle">
-                  <button type="button" id="aurora-store-btn" onclick="install_aurora_store()"
-                    class="btn btn-success" disabled>Checking status...</button>
+                  <button type="button" id="aurora-store-btn" onclick="install_aurora_store()" class="btn btn-success"
+                    disabled>Checking status...</button>
                 </div>
               </div>
             </div>
@@ -51,19 +52,20 @@
               </div>
               <div class="col-auto">
                 <div class="form-check form-switch align-middle">
-                  <button type="button" id="f-droid-btn" onclick="install_f_droid()"
-                    class="btn btn-primary" disabled>Checking status...</button>
+                  <button type="button" id="f-droid-btn" onclick="install_f_droid()" class="btn btn-primary"
+                    disabled>Checking status...</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <button type="button" onclick="waydroid_open_settings()"
-        class="btn btn-primary">Open Settings</button>
+      <button type="button" onclick="waydroid_open_settings()" class="btn btn-primary">Open Settings</button>
       <br><br>
       <strong>Useful information</strong>
-      <p>In the event that an app you regularly use on your phone is broken on blendOS, you could install MicroG from F-Droid by following the instructions <a href="javascript:void()" onclick="require('electron').shell.openExternal('https://microg.org/download.html')">here</a>.</p>
+      <p>In the event that an app you regularly use on your phone is broken on blendOS, you could install MicroG from
+        F-Droid by following the instructions <a href="javascript:void()"
+          onclick="require('electron').shell.openExternal('https://microg.org/download.html')">here</a>.</p>
     </div>
   </div>
 </div>

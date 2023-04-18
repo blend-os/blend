@@ -22,6 +22,7 @@ function init_waydroid() {
         if (e.data == 'success') {
             document.getElementById('waydroid-initialize-settings').classList.add('d-none')
             document.getElementById('waydroid-initialized-settings').classList.remove('d-none')
+            document.getElementById('first-time-waydroid').classList.remove('d-none')
         }
     }
 }

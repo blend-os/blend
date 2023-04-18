@@ -48,15 +48,15 @@ function install_aurora_store() {
     aurora_store_worker.onmessage = e => {
         if (e.data == 'success') {
             document.getElementById('aurora-store-btn').outerHTML =
-                `<button type="button btn-success" id="aurora-store-btn" onclick="install_aurora_store()"
-                class="btn btn-success" disabled>Installed</button>`
+                `<button type="button btn-success" id="aurora-store-btn" onclick="require('child_process').spawn('waydroid', ['app', 'launch', 'com.aurora.store'])"
+                class="btn btn-success">Open</button>`
         } else if (e.data == 'failed') {
             document.getElementById('aurora-store-btn').outerHTML =
                 `<button type="button btn-success" id="aurora-store-btn" onclick="install_aurora_store()"
-                class="btn btn-success" disabled>Failed</button>`
+                    class="btn btn-success" disabled>Failed</button>`
             setTimeout(() => {
                 document.getElementById('aurora-store-btn').outerHTML =
-                `<button type="button btn-success" id="aurora-store-btn" onclick="install_aurora_store()"
+                    `<button type="button btn-success" id="aurora-store-btn" onclick="install_aurora_store()"
                     class="btn btn-success">Install</button>`
             }, 2000)
         }
@@ -85,15 +85,15 @@ function install_f_droid() {
     f_droid_worker.onmessage = e => {
         if (e.data == 'success') {
             document.getElementById('f-droid-btn').outerHTML =
-                `<button type="button btn-success" id="f-droid-btn" onclick="install_f_droid()"
-                    class="btn btn-primary" disabled>Installed</button>`
+                `<button type="button btn-success" id="fdroid-btn" onclick="require('child_process').spawn('waydroid', ['app', 'launch', 'org.fdroid.fdroid'])"
+                    class="btn btn-primary">Open</button>`
         } else if (e.data == 'failed') {
             document.getElementById('f-droid-btn').outerHTML =
                 `<button type="button btn-success" id="f-droid-btn" onclick="install_f_droid()"
                     class="btn btn-primary" disabled>Failed</button>`
             setTimeout(() => {
                 document.getElementById('f-droid-btn').outerHTML =
-                `<button type="button btn-success" id="f-droid-btn" onclick="install_f_droid()"
+                    `<button type="button btn-success" id="f-droid-btn" onclick="install_f_droid()"
                     class="btn btn-primary">Install</button>`
             }, 2000)
         }
@@ -115,13 +115,21 @@ require('fs').stat('/var/lib/waydroid', (err, stat) => {
         setTimeout(() => {
             if (require('child_process').spawnSync('waydroid', ['app', 'list']).stdout.includes('com.aurora.store')) {
                 document.getElementById('aurora-store-btn').outerHTML =
+                    `<button type="button btn-success" id="aurora-store-btn" onclick="require('child_process').spawn('waydroid', ['app', 'launch', 'com.aurora.store'])"
+                        class="btn btn-success">Open</button>`
+            } else {
+                document.getElementById('aurora-store-btn').outerHTML =
                     `<button type="button btn-success" id="aurora-store-btn" onclick="install_aurora_store()"
-                        class="btn btn-success" disabled>Installed</button>`
+                        class="btn btn-success">Install</button>`
             }
             if (require('child_process').spawnSync('waydroid', ['app', 'list']).stdout.includes('org.fdroid.fdroid')) {
                 document.getElementById('f-droid-btn').outerHTML =
-                    `<button type="button btn-success" id="fdroid-btn" onclick="install_f_droid()"
-                        class="btn btn-primary" disabled>Installed</button>`
+                    `<button type="button btn-success" id="fdroid-btn" onclick="require('child_process').spawn('waydroid', ['app', 'launch', 'org.fdroid.fdroid'])"
+                        class="btn btn-primary">Open</button>`
+            } else {
+                document.getElementById('f-droid-btn').outerHTML =
+                    `<button type="button btn-success" id="f-droid-btn" onclick="install_f_droid()"
+                        class="btn btn-primary">Install</button>`
             }
         }, 1000)
     } else {

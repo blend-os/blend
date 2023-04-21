@@ -9,7 +9,7 @@ function init_waydroid() {
         setTimeout(() => {
             require('child_process').spawnSync('pkexec', ['waydroid', 'shell', 'pm', 'disable', 'com.android.inputmethod.latin'])
             require('child_process').spawnSync('waydroid', ['prop', 'set', 'persist.waydroid.multi_windows', 'true'])
-            if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA')) {
+            if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C lspci']).stdout.includes('NVIDIA')) {
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.gralloc=default" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.egl=swiftshader" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
             }
@@ -109,7 +109,7 @@ require('fs').stat('/var/lib/waydroid', (err, stat) => {
     if (err == null) {
         document.getElementById('waydroid-initialize-settings').classList.add('d-none')
         document.getElementById('waydroid-initialized-settings').classList.remove('d-none')
-        if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA')) {
+        if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C lspci']).stdout.includes('NVIDIA')) {
             document.getElementById('nvidia-warning-installed').classList.remove('d-none')
         }
         require('child_process').spawn('waydroid', ['session', 'start'])
@@ -134,7 +134,7 @@ require('fs').stat('/var/lib/waydroid', (err, stat) => {
             }
         }, 1000)
     } else {
-        if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA')) {
+        if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C lspci']).stdout.includes('NVIDIA')) {
             document.getElementById('nvidia-warning').classList.remove('d-none')
         }
     }

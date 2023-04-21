@@ -212,8 +212,12 @@ def create_container_sessions(type='xsessions'):
                     f'{session_dir}/blend-{c};{i}'), 0o775)
 
 
-def con_get_output(name, cmd): return subprocess.run(['sudo', '-u', user, 'podman', 'exec', '--user', getpass.getuser(), '-it', name, 'bash', '-c', cmd],
-                                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
+def con_get_output(name, cmd):
+    try:
+        return subprocess.run(['sudo', '-u', user, 'podman', 'exec', '--user', getpass.getuser(), '-it', name, 'bash', '-c', cmd],
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=5).stdout.decode('UTF-8').strip()
+    except subprocess.TimeoutExpired:
+        return ''
 
 
 user = getpass.getuser()

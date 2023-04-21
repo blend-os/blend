@@ -7,14 +7,13 @@ function init_waydroid() {
         require('child_process').spawnSync('pkexec', ['systemctl', 'enable', '--now', 'waydroid-container'])
         require('child_process').spawn('sh', ['-c', 'waydroid session start & disown'])
         setTimeout(() => {
-            require('child_process').spawnSync('pkexec', ['waydroid', 'shell', 'pm', 'disable', 'com.android.inputmethod.latin'])
             require('child_process').spawnSync('waydroid', ['prop', 'set', 'persist.waydroid.multi_windows', 'true'])
-            if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C lspci']).stdout.includes('NVIDIA')) {
+            if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA')) {
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.gralloc=default" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.egl=swiftshader" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
             }
             require('child_process').spawn('sh', ['-c', 'pkexec waydroid upgrade -o; waydroid session stop; waydroid session start'])
-            setTimeout(() => { postMessage('success') }, 1000)
+            setTimeout(() => { require('child_process').spawnSync('pkexec', ['waydroid', 'shell', 'pm', 'disable', 'com.android.inputmethod.latin']); postMessage('success') }, 5000)
         }, 2000)
         `
     )

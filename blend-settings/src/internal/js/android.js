@@ -8,13 +8,14 @@ function init_waydroid() {
         require('child_process').spawn('sh', ['-c', 'waydroid session start & disown'])
         setTimeout(() => {
             require('child_process').spawnSync('waydroid', ['prop', 'set', 'persist.waydroid.multi_windows', 'true'])
+            require('child_process').spawnSync('pkexec', ['waydroid', 'shell', 'pm', 'disable', 'com.android.inputmethod.latin'])
             if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA')) {
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.gralloc=default" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.egl=swiftshader" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
             }
             require('child_process').spawn('sh', ['-c', 'pkexec waydroid upgrade -o; waydroid session stop; waydroid session start'])
-            setTimeout(() => { require('child_process').spawnSync('pkexec', ['waydroid', 'shell', 'pm', 'disable', 'com.android.inputmethod.latin']); postMessage('success') }, 5000)
-        }, 2000)
+            setTimeout(() => { postMessage('success') }, 1000)
+        }, 8000)
         `
     )
     init_worker.onmessage = e => {
@@ -23,6 +24,24 @@ function init_waydroid() {
             document.getElementById('waydroid-initialized-settings').classList.remove('d-none')
             document.getElementById('first-time-waydroid').classList.remove('d-none')
         }
+    }
+    if (require('child_process').spawnSync('waydroid', ['app', 'list']).stdout.includes('com.aurora.store')) {
+        document.getElementById('aurora-store-btn').outerHTML =
+            `<button type="button btn-success" id="aurora-store-btn" onclick="require('child_process').spawn('waydroid', ['app', 'launch', 'com.aurora.store'])"
+                class="btn btn-success">Open</button>`
+    } else {
+        document.getElementById('aurora-store-btn').outerHTML =
+            `<button type="button btn-success" id="aurora-store-btn" onclick="install_aurora_store()"
+                class="btn btn-success">Install</button>`
+    }
+    if (require('child_process').spawnSync('waydroid', ['app', 'list']).stdout.includes('org.fdroid.fdroid')) {
+        document.getElementById('f-droid-btn').outerHTML =
+            `<button type="button btn-success" id="fdroid-btn" onclick="require('child_process').spawn('waydroid', ['app', 'launch', 'org.fdroid.fdroid'])"
+                class="btn btn-primary">Open</button>`
+    } else {
+        document.getElementById('f-droid-btn').outerHTML =
+            `<button type="button btn-success" id="f-droid-btn" onclick="install_f_droid()"
+                class="btn btn-primary">Install</button>`
     }
 }
 

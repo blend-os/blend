@@ -5,12 +5,13 @@ build() {
     add_module overlay
     add_binary bash
     add_binary tar
+    add_binary overlayfs-tools
     add_runscript
 }
 
 help() {
     cat <<HELPEOF
-This provides a support for mounting the blend /usr overlay. No
+This provides a support for mounting the blend overlays. No
 configuration is needed.
 HELPEOF
 }

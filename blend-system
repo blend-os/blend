@@ -70,51 +70,39 @@ def info(msg):
 def error(err):
     print (colors.bold + colors.fg.red + '>> e: ' + colors.reset + colors.bold + err + colors.reset)
 
-def load_prev_state():
-    subprocess.call(['rm', '-rf', '/blend/overlay/current'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['mkdir', '-p', '/blend/overlay/current/usr'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['tar', '-xvpzf', f'/blend/states/state{current_state()}.tar.gz', '-C', '/blend/overlay/current/usr', '--numeric-owner'],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call(['rm', '-f', f'/blend/states/state{current_state()}.tar.gz'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
 ### END
 
 def current_state():
     _state = -1
-    for s in os.listdir('/blend/states'):
-        if re.match(r'^state([0-9]+)\.tar\.gz$', s):
+    for s in os.listdir('/.states'):
+        if re.match(r'^state([0-9]+)\.squashfs$', s):
             if int(s[5:-7]) > _state:
                 _state = int(s[5:-7])
     return _state
 
 def save_state():
-    subprocess.call(['mkdir', '-p', '/blend/states'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['mkdir', '-p', '/.states'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     state = current_state() + 1
 
-    subprocess.call(r"find /blend/states/ -type f -not -name 'state" + str(state - 1) + ".tar.gz' -print0 | xargs -0 -I {} rm {}", stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
-    subprocess.call(['tar', '-C', '/blend/overlay/current/usr', '-cpzf', f'/blend/states/state{state}.tar.gz', '.'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call(['bash', '-c', 'rm -f /.states/*.tmp'])
+
+    if subprocess.call(['mksquashfs', '/usr', f'/.states/state{state}.squashfs.tmp', '-no-compression'], stdout=sys.stdout, stderr=sys.stderr) == 0:
+        subprocess.call(['rm', '-rf', 'add-squashfs'], cwd='/tmp')
+        subprocess.call(['mkdir', '-p', 'add-squashfs'], cwd='/tmp')
+        subprocess.call(['cp', '-a', '/var/lib', 'add-squashfs/varlib'], cwd='/tmp')
+        if subprocess.call(['mksquashfs', 'add-squashfs', f'/.states/state{state}.squashfs.tmp', '-no-compression'], cwd='/tmp') == 0:
+            subprocess.call(['mv', f'/.states/state{state}.squashfs.tmp', f'/.states/state{state}.squashfs'])
+        else:
+            error('state creation failed')
+            exit(1)
+    else:
+        error('state creation failed')
+        exit(1)
+
     info(f'saved state {state}')
 
-def autosave_state():
-    while True:
-        if not os.path.isfile('/blend/states/.disable_states'):
-            save_state()
-        time.sleep(12*60*60) # XXX: make this configurable
-
-def toggle_states():
-    if os.path.isfile('/blend/states/.disable_states'):
-        os.remove('/blend/states/.disable_states')
-        info('enabled saving states automatically (every 6 hours; this will be configurable in future releases)')
-    else:
-        subprocess.call(['touch', '/blend/states/.disable_states'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        info('disabled saving states automatically')
-
 def rollback():
-    if current_state() == -1:
-        error('no states present')
-        exit(1)
-    subprocess.call(['touch', '/blend/states/.load_prev_state'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    info(f'will rollback to the previous state on the next boot')
+    info("Rollback hasn't been implemented yet.")
 
 description = f'''
 {colors.bold}{colors.fg.purple}Usage:{colors.reset}
@@ -126,7 +114,6 @@ description = f'''
   {colors.bold}help{colors.reset}                  Show this help message and exit.
   {colors.bold}version{colors.reset}               Show version information and exit.
   {colors.bold}save-state{colors.reset}            Save the current state (backup).
-  {colors.bold}toggle-states{colors.reset}         Enable/disable automatic state creation (you can still manually save states).
   {colors.bold}rollback{colors.reset}              Rollback to previous state.
 
 {colors.bold}{colors.fg.purple}options for commands{colors.reset}:
@@ -142,8 +129,6 @@ parser = argparse.ArgumentParser(description=description, usage=argparse.SUPPRES
 command_map = { 'help': 'help',
                 'version': 'version',
                 'save-state': save_state,
-                'toggle-states': toggle_states,
-                'autosave-state': autosave_state,
                 'rollback': rollback }
 parser.add_argument('command', choices=command_map.keys(), help=argparse.SUPPRESS)
 parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)

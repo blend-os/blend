@@ -255,11 +255,22 @@ if [ -d "/usr/lib/rpm/" ]; then
     net_mounts=${net_mounts%?}
     echo "%_netsharedpath ${net_mounts}" > /usr/lib/rpm/macros.d/macros.blend
 elif [ -d "/etc/dpkg/" ]; then
-    mkdir -p /etc/dpkg/dpkg.cfg.d
+    mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d
+
     echo -n > /etc/dpkg/dpkg.cfg.d/00_blend
     for net_mount in ${HOST_MOUNTS_RO} ${HOST_MOUNTS} '/etc/hosts' '/etc/resolv.conf' '/etc/localtime'; do
         printf "path-exclude %s/*\n" "${net_mount}" >> /etc/dpkg/dpkg.cfg.d/00_blend
     done
+
+    echo -n > /etc/apt/apt.conf.d/00_blend
+    for init_mount in ${init_ro_mounts}; do
+        printf 'DPkg::Pre-Invoke {"if findmnt %s >/dev/null; then umount -l %s; fi";};\n' \
+            "${init_mount}" "${init_mount}" >> /etc/apt/apt.conf.d/00_blend
+
+        printf 'DPkg::Post-Invoke {"if [ -e /run/host/%s ] || [ -e /run/host/$(readlink -fm /run/host/%s) ]; then mount --rbind $(readlink -fm /run/host/%s) %s 2>/dev/null || mount --rbind /run/host/$(readlink -fm /run/host/%s) %s; fi";};\n' \
+            "${init_mount}" "${init_mount}" "${init_mount}" "${init_mount}" "${init_mount}" "${init_mount}" >> /etc/apt/apt.conf.d/00_blend
+    done
+
 ### Section END
 elif [ -d "/usr/share/libalpm/scripts" ]; then
 	echo "#!/bin/sh" > /usr/share/libalpm/scripts/00_blend_pre_hook.sh

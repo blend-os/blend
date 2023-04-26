@@ -65,7 +65,9 @@ def create_container_binaries():
     for c in _list:
         c = c.strip()
         for i in con_get_output(c, '''find /usr/bin -type f -printf "%P\n" 2>/dev/null;
-                                      find /usr/local/bin -type f -printf "%P\n" 2>/dev/null;''').split('\n'):
+                                      find -L /usr/bin -xtype l -type f -printf "%P\n" 2>/dev/null;
+                                      find /usr/local/bin -type f -printf "%P\n" 2>/dev/null;
+                                      find -L /usr/local/bin -xtype l -type f -printf "%P\n" 2>/dev/null;''').split('\n'):
             i = i.strip()
             os.makedirs(os.path.expanduser(
                 f'~/.local/bin/blend_{c}'), exist_ok=True)

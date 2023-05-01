@@ -53,7 +53,7 @@ sudo chown (user) -R /usr/libexec/initscripts
 
 Enable the blend-files.service
 
-systemctl enable blendfiles.service
+systemctl enable blend-files.service
 
 The cli is done.
 

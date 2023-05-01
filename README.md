@@ -22,8 +22,10 @@ It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 ## Installation
 Install podman from your distro's repo.
 i.e sudo dnf install podman
+
 Clone the files to the computer:
 git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
+
 Copy the following to eithier /home/(user)/.local/bin or /usr/bin
 
 blend-files
@@ -38,6 +40,12 @@ sudo cp blend-files blend-system blend.hook blend.install host-blend init-blend 
 
 Copy the service file to /etc/systemd/system
 sudo cp blend-files.service /etc/systemd/system
+
+Now enter the overlayfs-tools directory
+cd overlayfs-tools
+
+Make the package inside
+make
 
 Take ownership of /usr/libexec/initcripts
 sudo chown (user) -R /usr/libexec/initscripts
@@ -61,7 +69,29 @@ possible commands are as follows
                 '-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
                 '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
                 '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
- to install the gui you need to copy a couple more files.          
+ to install the gui you need to copy a couple more files. 
+ cd
+ cd blend
+
+Copy the blend-settings.asar to /usr/lib
+sudo cp blend-settings.asar /usr/lib
+
+Copy the blend-settings executable to /usr/bin or home/(user)/local/bin
+sudo cp blend-settings.asar /usr/bin
+
+Enable the blend-files.service
+systemctl enable blendfiles.service
+
+Thats the main Install, some goodies below
+
+To start on log in add the following to .bash_profile
+blend start-containers
+blend-files &
+disown blend-files
+
+To add to home screen, move the .desktop
+ 
+
              
 
 

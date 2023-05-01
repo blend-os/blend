@@ -26,7 +26,7 @@ i.e sudo dnf install podman
 Clone the files to the computer:
 git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
 
-Copy the following to eithier /home/(user)/.local/bin or /usr/bin
+Copy the following to either /home/(user)/.local/bin or /usr/bin
 
 blend
 blend-files
@@ -51,7 +51,7 @@ Make the package inside
 
 make
 
-Take ownership of /usr/libexec/initcripts
+Take ownership of /usr/libexec/initscripts
 
 sudo chown (user) -R /usr/libexec/initscripts
 

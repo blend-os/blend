@@ -70,7 +70,10 @@ possible commands are as follows
                 '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
                 '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
  to install the gui you need to copy a couple more files. 
- cd
+ 
+ Return to main Directory with cd
+ 
+ Go back to blend folder
  cd blend
 
 Copy the blend-settings.asar to /usr/lib
@@ -89,7 +92,8 @@ blend start-containers
 blend-files &
 disown blend-files
 
-To add to home screen, move the .desktop
+To add to application launcher, move the .desktop to /usr/share/applications
+sudo cp blend-settings.desktop /usr/share/applications
  
 
              

@@ -51,6 +51,10 @@ make
 Take ownership of /usr/libexec/initcripts
 sudo chown (user) -R /usr/libexec/initscripts
 
+Enable the blend-files.service
+
+systemctl enable blendfiles.service
+
 The cli is done.
 
 possible commands are as follows
@@ -70,10 +74,7 @@ possible commands are as follows
                 '-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
                 '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
                 '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
-Enable the blend-files.service
 
-systemctl enable blendfiles.service
- 
 to install the gui you need to copy a couple more files and install electron and node js.
  
 Install nodejs.

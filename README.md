@@ -40,15 +40,19 @@ blend-settings
 sudo cp blend-files blend-system blend.hook blend.install host-blend init-blend blend-settings
 
 Copy the service file to /etc/systemd/system
+
 sudo cp blend-files.service /etc/systemd/system
 
 Now enter the overlayfs-tools directory
+
 cd overlayfs-tools
 
 Make the package inside
+
 make
 
 Take ownership of /usr/libexec/initcripts
+
 sudo chown (user) -R /usr/libexec/initscripts
 
 Enable the blend-files.service
@@ -78,14 +82,17 @@ possible commands are as follows
 to install the gui you need to copy a couple more files and install electron and node js.
  
 Install nodejs.
+
 i.e. sudo dnf install nodejs
  
 Install Electron
+
 i.e sudo npm install electron -g
 
 Return to main Directory with cd
  
 Go back to blend folder
+
 cd blend
 
 Copy the blend-settings.asar to /usr/lib
@@ -106,6 +113,7 @@ blend-files &
 disown blend-files
 
 To add to application launcher, move the .desktop to /usr/share/applications
+
 sudo cp blend-settings.desktop /usr/share/applications
  
 

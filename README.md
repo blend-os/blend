@@ -112,9 +112,9 @@ blend start-containers
 blend-files &
 disown blend-files
 
-To add to application launcher, move the .desktop to /usr/share/applications
+To add to application launcher, move the .desktop and the icon to /usr/share/applications
 
-sudo cp blend-settings.desktop /usr/share/applications
+sudo cp blend-settings.desktop blend-settings.icon /usr/share/applications
  
 
              

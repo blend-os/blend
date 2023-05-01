@@ -18,3 +18,53 @@ Aside from these lines, all the other code in this repository has been written b
 ## Usage
 
 It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
+
+#Installation
+install podman from your distro's repo.
+i.e sudo dnf install podman
+Clone the files to the computer:
+git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
+Copy the following to eithier /home/(user)/.local/bin or /usr/bin
+
+blend-files
+blend-system
+blend.hook
+blend.install
+host-blend
+init-blend 
+blend-settings
+
+sudo cp blend-files blend-system blend.hook blend.install host-blend init-blend blend-settings
+
+Copy the service file to /etc/systemd/system
+sudo cp blend-files.service /etc/systemd/system
+
+Take ownership of /usr/libexec/initcripts
+sudo chown (user) -R /usr/libexec/initscripts
+
+The cli is done.
+
+possible commands are as follows
+
+                'enter': enter_container,
+                'exec': enter_container,
+                'create-container': core_create_container,
+                'remove-container': remove_container,
+                'list-containers': list_containers,
+                'start-containers': start_containers,
+                'sync': sync_blends,
+                'help': 'help',
+                'version': 'version' }
+                'command', choices=command_map.keys(), help=argparse.SUPPRESS)
+                'pkg', action='store', type=str, nargs='*', help=argparse.SUPPRESS)
+                '-cn', '--container-name', action='store', nargs=1, metavar='CONTAINER NAME', help=argparse.SUPPRESS)
+                '-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
+                '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
+                '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
+           
+             
+
+
+
+
+

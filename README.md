@@ -109,6 +109,8 @@ sudo cp blend-settings /usr/bin
 Thats the main Install, some goodies below
 
 To start on log in add the following to .bash_profile
+
+
 blend start-containers
 blend-files &
 disown blend-files

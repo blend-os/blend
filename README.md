@@ -20,7 +20,7 @@ Aside from these lines, all the other code in this repository has been written b
 It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 
 ## Installation
-install podman from your distro's repo.
+Install podman from your distro's repo.
 i.e sudo dnf install podman
 Clone the files to the computer:
 git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
@@ -61,7 +61,7 @@ possible commands are as follows
                 '-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
                 '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
                 '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
-           
+ to install the gui you need to copy a couple more files.          
              
 
 

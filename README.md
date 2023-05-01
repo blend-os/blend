@@ -24,6 +24,7 @@ Install podman from your distro's repo.
 i.e sudo dnf install podman
 
 Clone the files to the computer:
+
 git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
 
 Copy the following to either /home/(user)/.local/bin or /usr/bin

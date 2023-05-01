@@ -114,7 +114,7 @@ disown blend-files
 
 To add to application launcher, move the .desktop and the icon to /usr/share/applications
 
-sudo cp blend-settings.desktop blend-settings.icon /usr/share/applications
+sudo cp blend-settings.desktop blend-settings.png /usr/share/applications
  
 
              

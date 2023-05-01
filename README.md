@@ -69,12 +69,20 @@ possible commands are as follows
                 '-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
                 '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
                 '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
- to install the gui you need to copy a couple more files. 
  
- Return to main Directory with cd
  
- Go back to blend folder
- cd blend
+to install the gui you need to copy a couple more files and install electron and node js.
+ 
+Install nodejs.
+i.e. sudo dnf install nodejs
+ 
+Install Electron
+i.e sudo npm install electron -g
+
+Return to main Directory with cd
+ 
+Go back to blend folder
+cd blend
 
 Copy the blend-settings.asar to /usr/lib
 sudo cp blend-settings.asar /usr/lib

@@ -19,7 +19,7 @@ Aside from these lines, all the other code in this repository has been written b
 
 It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 
-#Installation
+## Installation
 install podman from your distro's repo.
 i.e sudo dnf install podman
 Clone the files to the computer:

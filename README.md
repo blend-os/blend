@@ -28,6 +28,7 @@ git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
 
 Copy the following to eithier /home/(user)/.local/bin or /usr/bin
 
+blend
 blend-files
 blend-system
 blend.hook

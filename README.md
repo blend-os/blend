@@ -38,7 +38,7 @@ host-blend
 init-blend 
 blend-settings
 
-sudo cp blend-files blend-system blend.hook blend.install host-blend init-blend blend-settings
+sudo cp blend-files blend-system blend.hook blend.install host-blend init-blend blend-settings /usr/bin
 
 Copy the service file to /etc/systemd/system
 

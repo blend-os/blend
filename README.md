@@ -89,7 +89,7 @@ Copy the blend-settings.asar to /usr/lib
 sudo cp blend-settings.asar /usr/lib
 
 Copy the blend-settings executable to /usr/bin or home/(user)/local/bin
-sudo cp blend-settings.asar /usr/bin
+sudo cp blend-settings /usr/bin
 
 Enable the blend-files.service
 systemctl enable blendfiles.service

@@ -109,18 +109,18 @@ if command -v apt-get &>/dev/null; then
     apt-get update &>/dev/null
     DEBIAN_FRONTEND=noninteractive apt-get -y install bash bc curl less wget apt-utils apt-transport-https dialog \
                                                 diffutils findutils gnupg2 sudo time util-linux libnss-myhostname \
-                                                libvte-2.9[0-9]-common libvte-common lsof ncurses-base passwd \
+                                                libvte-2.9[0-9]-common libvte-common lsof ncurses-base passwd inotify-tools \
                                                 pinentry-curses libegl1-mesa libgl1-mesa-glx libvulkan1 mesa-vulkan-drivers &>/dev/null
 
 elif command -v pacman &>/dev/null; then
     pacman --noconfirm -Syyu &>/dev/null
     pacman --noconfirm -Sy bash bc curl wget diffutils findutils gnupg sudo time util-linux vte-common lsof ncurses pinentry \
-                             mesa opengl-driver vulkan-intel vulkan-radeon base-devel git &>/dev/null
+                             mesa opengl-driver vulkan-intel vulkan-radeon base-devel git inotify-tools &>/dev/null
 
 elif command -v dnf &>/dev/null; then
     dnf install -y --allowerasing bash bc curl wget diffutils findutils dnf-plugins-core gnupg2 less lsof passwd pinentry \
                                     procps-ng vte-profile ncurses util-linux sudo time shadow-utils vulkan mesa-vulkan-drivers \
-                                    mesa-dri-drivers &>/dev/null
+                                    mesa-dri-drivers inotify-tools &>/dev/null
 
 fi
 
@@ -324,6 +324,23 @@ chmod 4755 /usr/bin/sudo
 
 fi
 
+if ! command -v inotify-tools &>/dev/null; then
+    if command -v apt-get &>/dev/null; then
+        apt-get update &>/dev/null
+        DEBIAN_FRONTEND=noninteractive apt-get -y install inotify-tools &>/dev/null
+
+    elif command -v pacman &>/dev/null; then
+        pacman --noconfirm -Syyu &>/dev/null
+        pacman --noconfirm -Sy inotify-tools &>/dev/null
+
+    elif command -v dnf &>/dev/null; then
+        dnf install -y --allowerasing inotify-tools &>/dev/null
+    fi
+fi
+
+source /run/.containerenv
+CONTAINER_NAME="$name"
+
 if [[ ! -f '/.init_blend.lock' ]] && command -v pacman &>/dev/null; then
     cd /; git clone https://aur.archlinux.org/yay.git &>/dev/null; cd yay
     chown -R "$_uname" . &>/log
@@ -333,8 +350,121 @@ if [[ ! -f '/.init_blend.lock' ]] && command -v pacman &>/dev/null; then
     touch /.init_blend.lock
 fi
 
-echo
+for full_file in /usr/bin/*; do
+    if [[ -x "$full_file" ]]; then
+        file="$(basename "${full_file}")"
+        if [[ ! -f "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}" ]]; then
+            mkdir -p "${HOME}/.local/bin/blend_bin"
+            echo "#!/bin/bash" > "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+            echo '[ -f /run/.containerenv ] && { if [[ -e "/usr/bin/'"${file}"'" ]]; then /usr/bin/'"${file}"' "$@"; exit $?; else echo "This command can be accessed from the host, or from the container '"'${CONTAINER_NAME}'"'."; exit 127; fi } || :' >> "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+            echo 'BLEND_ALLOW_ROOT= BLEND_NO_CHECK= blend enter -cn '"${CONTAINER_NAME}"' -- '"${file}"' "$@"' >> "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+            chmod 755 "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+        fi
+    fi
+done
+
+for full_file in /usr/share/applications/*.desktop; do
+    file="$(basename "${full_file}")"
+
+    mkdir -p "${HOME}/.local/share/applications"
+
+    echo -n > "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+
+    while read -r line; do
+        if [[ $line == Name* ]]; then
+            echo "${line} (container ${CONTAINER_NAME})" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+        elif [[ $line == Exec* ]]; then
+            echo "Exec=blend enter -cn ${CONTAINER_NAME} -- ${line:5}" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+        elif [[ $line == Icon* ]]; then
+            if [[ -e "${line:5}" ]]; then
+                mkdir -p "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"; cp "${line:5}" "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"
+                echo "Icon=${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}/$(basename "${line:5}")" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+            else
+                ICON_PATH="$(find /usr/share/icons/hicolor -type f -iname "${line:5}.*" -print -quit 2>/dev/null)"
+                mkdir -p "$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')"
+                FINAL_ICON_PATH="$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')/$(echo "${file%.*}").$(basename "${ICON_PATH}" | sed 's/^.*\.//')"
+                cp "${ICON_PATH}" "${FINAL_ICON_PATH}" &>/dev/null
+                echo "Icon=${FINAL_ICON_PATH}" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+            fi
+        else
+            echo "$line" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+        fi
+    done < "/usr/share/applications/${file}"
+
+    sed -i 's/DBusActivatable=true/DBusActivatable=false/g' "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+    sed -i '/^TryExec/d' "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+
+    chmod 755 "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+done
+
 echo "Completed container setup."
+
+mkdir -p /usr/share/applications /usr/bin
+inotifywait -m /usr/share/applications /usr/bin -e create,delete,move 2>/dev/null |
+    while read dir action file; do
+        ( if [[ "$dir" == "/usr/bin/" ]]; then
+            if [[ "$action" == *"CREATE"* ]]; then
+                if [[ ! -f "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}" ]] && [[ -x "/usr/bin/${file}" ]]; then
+                    mkdir -p "${HOME}/.local/bin/blend_bin"
+                    echo "#!/bin/bash" > "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                    echo '[ -f /run/.containerenv ] && { if [[ -e "/usr/bin/'"${file}"'" ]]; then /usr/bin/'"${file}"' "$@"; exit $?; else echo "This command can be accessed from the host, or from the container '"'${CONTAINER_NAME}'"'."; exit 127; fi } || :' >> "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                    echo 'BLEND_ALLOW_ROOT= BLEND_NO_CHECK= blend enter -cn '"${CONTAINER_NAME}"' -- '"${file}"' "$@"' >> "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                    chmod 755 "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                fi
+            elif [[ "$action" == *"DELETE"* ]]; then
+                rm -f "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+            elif [[ "$action" == *"MOVED_FROM"* ]]; then
+                rm -f "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+            elif [[ "$action" == *"MOVED_TO"* ]]; then
+                if [[ ! -f "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}" ]] && [[ -x "/usr/bin/${file}" ]]; then
+                    mkdir -p "${HOME}/.local/bin/blend_bin"
+                    echo "#!/bin/bash" > "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                    echo '[ -f /run/.containerenv ] && { if [[ -e "/usr/bin/'"${file}"'" ]]; then /usr/bin/'"${file}"' "$@"; exit $?; else echo "This command can be accessed from the host, or from the container '"'${CONTAINER_NAME}'"'."; exit 127; fi } || :' >> "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                    echo 'BLEND_ALLOW_ROOT= BLEND_NO_CHECK= blend enter -cn '"${CONTAINER_NAME}"' -- '"${file}"' "$@"' >> "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                    chmod 755 "${HOME}/.local/bin/blend_bin/${file}.${CONTAINER_NAME}"
+                fi
+            fi
+        fi ) &
+        ( if [[ "$dir" == "/usr/share/applications/" ]]; then
+            if [[ "$action" == *"CREATE"* ]] || [[ "$action" == *"MOVED_TO"* ]]; then
+                if [[ "$file" == *'.desktop' ]]; then
+                    mkdir -p "${HOME}/.local/share/applications"
+
+                    echo -n > "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+
+                    while read -r line; do
+                        if [[ $line == Name* ]]; then
+                            echo "${line} (${CONTAINER_NAME})" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                        elif [[ $line == Exec* ]]; then
+                            echo "Exec=blend enter -cn ${CONTAINER_NAME} -- ${line:5}" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                        elif [[ $line == Icon* ]]; then
+                            if [[ -e "${line:5}" ]]; then
+                                mkdir -p "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"; cp "${line:5}" "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"
+                                echo "Icon=${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}/$(basename "${line:5}")" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                            else
+                                ICON_PATH="$(find /usr/share/icons/hicolor -type f -iname "${line:5}.*" -print -quit 2>/dev/null)"
+                                mkdir -p "$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')"
+                                FINAL_ICON_PATH="$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')/$(echo "${file%.*}").$(basename "${ICON_PATH}" | sed 's/^.*\.//')"
+                                cp "${ICON_PATH}" "${FINAL_ICON_PATH}"
+                                echo "Icon=${FINAL_ICON_PATH}" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                            fi
+                        else
+                            echo "$line" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                        fi
+                    done < "/usr/share/applications/${file}"
+
+                    sed -i 's/DBusActivatable=true/DBusActivatable=false/g' "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                    sed -i '/^TryExec/d' "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+
+                    chmod 755 "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+                fi
+            elif [[ "$action" == *"DELETE"* ]]; then
+                rm -f "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+            elif [[ "$action" == *"MOVED_FROM"* ]]; then
+                rm -f "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
+            fi
+        fi ) &
+    done &
 
 while true; do
     for i in /etc/hosts /etc/localtime /etc/resolv.conf; do

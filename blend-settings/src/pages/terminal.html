@@ -54,6 +54,7 @@
 
         function create_term() {
             ipc.removeAllListeners('terminal.reset')
+            ipc.removeAllListeners('terminal.resize')
             ipc.removeAllListeners('terminal.keystroke')
             ipc.removeAllListeners('terminal.incomingData')
             ipc.removeAllListeners('title')

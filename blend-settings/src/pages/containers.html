@@ -1,7 +1,28 @@
 <div class="container-fluid d-flex justify-content-center">
   <div class="col-12 col-lg-10 col-xl-8 mx-auto">
     <strong class="mb-0">Containers</strong>
-    <p>You can install any app from any of the supported distributions (<b>Arch</b>, <b>Fedora</b>, and <b>Ubuntu</b>). Apps you install will appear as regular applications on your system (as well as binaries and package managers). You can override the priority in which common binaries are made available on the system by rearranging (dragging) the containers below to select the priority that should be assigned to each container.</p>
+    <p>Installed apps will appear in the application launcher. Binaries can be executed with the container's name as a suffix. For example, <b>apt</b> -> <b>apt.ubuntu</b>, in a container named 'ubuntu'.</p>
+    <form onsubmit="create_container(); return false">
+      <div class="form-group row">
+        <div class="col-sm-4"></div>
+        <div class="col-sm-3">
+          <input type="text" class="form-control" id="inputContainerName" placeholder="Container name" required>
+        </div>
+        <div class="col-sm-4">
+          <select class="form-control" id="inputContainerDistro">
+            <option selected>Arch</option>
+            <option>Fedora Rawhide</option>
+            <option>Ubuntu 22.04</option>
+            <option>Ubuntu 22.10</option>
+          </select>
+        </div>
+        <div class="col-sm-1">
+          <button type="submit" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg></button>
+        </div>
+      </div>
+    </form>
     <div class="list-group mb-4 shadow" id="container-list">
       <div class="list-group-item">
         <div class="row align-items-center">
@@ -17,29 +38,26 @@
 
 <div class="container-fluid d-flex justify-content-center">
   <div class="col-12 col-lg-10 col-xl-8 mx-auto">
-    <strong class="mb-0">Create new container</strong>
-    <p>Create a container for each distribution to be able to use their package managers and other binaries directly from a terminal.</p>
-    <form onsubmit="create_container(); return false">
+    <strong class="mb-0">Associations</strong>
+    <p>You can associate a binary to a container so as to use it without a suffix.</p>
+    <form onsubmit="create_association(); return false">
       <div class="form-group row">
-        <label for="inputContainerName" class="col-sm-3 col-form-label">Container name</label>
+        <div class="col-sm-4"></div>
+        <div class="col-sm-3">
+          <input type="text" class="form-control" id="inputAssociationBinaryName" placeholder="Binary name" required>
+        </div>
         <div class="col-sm-4">
-          <input type="text" class="form-control" id="inputContainerName" placeholder="Container name" required>
+          <input type="text" class="form-control" id="inputAssociationContainerName" placeholder="Container name" required>
+        </div>
+        <div class="col-sm-1">
+          <button type="submit" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg></button>
         </div>
       </div>
-      <div class="form-group row">
-        <label for="inputContainerDistro" class="col-sm-3 col-form-label">Distribution</label>
-        <div class="col-sm-4">
-          <select class="form-control" id="inputContainerDistro">
-            <option selected>Arch</option>
-            <option>Fedora Rawhide</option>
-            <option>Ubuntu 22.04</option>
-            <option>Ubuntu 22.10</option>
-          </select>
-        </div>
-      </div>
-      <br>
-      <button type="submit" id="publish-button" class="btn btn-primary">Create container</button>
     </form>
+    <div class="list-group mb-4 shadow" id="association-list">
+    </div>
   </div>
 </div>
 

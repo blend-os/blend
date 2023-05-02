@@ -24,7 +24,7 @@ function createWindow() {
     autoHideMenuBar: true
   })
 
-  mainWindow.setMenu(null)
+  // mainWindow.setMenu(null)
 
   mainWindow.loadFile('src/index.html')
 }
@@ -75,6 +75,7 @@ function loadTerminalWindow(title, cmd) {
   terminalWindow.show()
 
   ipcMain.removeAllListeners('terminal.reset')
+  ipcMain.removeAllListeners('terminal.resize')
   ipcMain.removeAllListeners('terminal.keystroke')
   ipcMain.removeAllListeners('terminal.incomingData')
   ipcMain.removeAllListeners('title')

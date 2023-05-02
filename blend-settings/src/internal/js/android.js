@@ -7,9 +7,9 @@ function init_waydroid() {
         require('child_process').spawnSync('pkexec', ['systemctl', 'enable', '--now', 'waydroid-container'])
         require('child_process').spawn('sh', ['-c', 'waydroid session start & disown'])
         setTimeout(() => {
-            require('child_process').spawnSync('waydroid', ['prop', 'set', 'persist.waydroid.multi_windows', 'true'])
+            require('child_process').spawnSync('sh', ['-c', 'echo "persist.waydroid.multi_windows=true" | pkexec tee -a /var/lib/waydroid/waydroid_base.prop'])
             require('child_process').spawnSync('pkexec', ['waydroid', 'shell', 'pm', 'disable', 'com.android.inputmethod.latin'])
-            if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA')) {
+            if (require('child_process').spawnSync('sh', ['-c', 'LC_ALL=C glxinfo | grep "^OpenGL renderer string: "']).stdout.includes('NVIDIA') || require('child_process').spawnSync('cat', ['/proc/cpuinfo']).stdout.includes('hypervisor')) {
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.gralloc=default" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
                 require('child_process').spawnSync('sh', ['-c', 'echo "ro.hardware.egl=swiftshader" | pkexec tee -a /var/lib/waydroid/waydroid.cfg'])
             }

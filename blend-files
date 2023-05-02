@@ -3,17 +3,12 @@
 import os
 import subprocess
 
-def get_containers():
-    return subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--sort=created', '--format',
-                                     '{{.Names}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip().split('\n')
-
 if os.path.isdir(os.path.expanduser('~/.local/bin/blend_bin')) and not os.path.isfile(os.path.expanduser('~/.local/bin/blend_bin/.associations')):
-    subprocess.call(['rm', '-rf', os.path.expanduser('~/.local/bin/blend_bin')], shell=False)
-    subprocess.call(['bash', '-c', 'rm -f "${HOME}/.local/share/applications/blend;"*'], shell=False)
+    subprocess.call(
+        ['rm', '-rf', os.path.expanduser('~/.local/bin/blend_bin')], shell=False)
+    subprocess.call(
+        ['bash', '-c', 'rm -f "${HOME}/.local/share/applications/blend;"*'], shell=False)
 
 subprocess.call(['mkdir', '-p', os.path.expanduser('~/.local/bin/blend_bin/')])
-subprocess.call(['touch', os.path.expanduser('~/.local/bin/blend_bin/.associations')], shell=False)
-
-for c in get_containers():
-    c = c.strip()
-    subprocess.call(['podman', 'start', c])
+subprocess.call(['touch', os.path.expanduser(
+    '~/.local/bin/blend_bin/.associations')], shell=False)

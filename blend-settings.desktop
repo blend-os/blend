@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=blendOS Settings
-Exec=blend-settings %U
-Terminal=false
-Type=Application
-Icon=blend-settings
-StartupWMClass=blend-settings
-Comment=Settings for blendOS.
-Categories=System;

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+run_latehook() {
+    echo
+
+    if [[ "$abort_staging" == true ]]; then
+        echo '[ BLEND ] Not applying system changes made in previous boot.'
+        rm -rf '/new_root/.upperdir' '/new_root/.workdir'; mkdir -p '/new_root/.upperdir' '/new_root/.workdir'
+    fi
+
+    if [[ -d "/new_root/blend/overlay/current" ]]; then
+        echo '[ BLEND ] Detected old version of overlay implementation, switching.'
+        rm -rf /new_root/.upperdir /new_root/.workdir
+        mv /new_root/blend/overlay/current/usr /new_root/.upperdir
+        rm -rf /new_root/blend
+    fi
+
+    # Broken attempt at getting rollback and snapshots working.
+    #
+    # if [[ -L "/new_root/.states/rollback.squashfs" ]] && [[ -e "/new_root/.states/rollback.squashfs" ]]; then
+    #     echo -n '[ BLEND ] Rolling back to selected state. Do __not__ power off or reboot.'
+    #     echo
+    #     cd /new_root
+    #     unsquashfs /new_root/.states/rollback.squashfs && (
+    #         for i in bin include lib lib32 share src; do
+    #             rm -rf rm -rf /new_root/.workdir/"$i" rm -rf /new_root/.upperdir/"$i" /new_root/usr/"$i"
+    #             mv squashfs-root/"$i" /new_root/usr
+    #         done
+    #         rm -rf /new_root/.workdir/varlib /new_root/.upperdir/varlib /new_root/var/lib
+    #         mkdir -p /new_root/var/lib
+    #         mv squashfs-root/varlib /new_root/var/varlib
+    #         echo ' - SUCCESS '
+    #         echo
+    #     ); cd ..
+    # fi
+
+    for i in bin include lib lib32 share src; do
+        echo -n "[ BLEND ] Setting up /usr/${i} overlay (applying changes)."
+        rm -rf /new_root/.workdir/"$i"
+        mkdir -p /new_root/.upperdir/"$i" /new_root/.workdir/"$i" /new_root/usr/"$i" /new_root/tmp
+        cd /new_root/tmp; overlayfs-tools merge -l /new_root/usr/$i -u /new_root/.upperdir/$i &>/dev/null; chmod 755 ./overlay-tools-*; ./overlay-tools-* &>/dev/null; rm -f ./overlay-tools-*; cd /
+        mkdir -p /new_root/.upperdir/"$i"
+        mount -t overlay overlay -o 'lowerdir=/new_root/usr/'$i',upperdir=/new_root/.upperdir/'$i',workdir=/new_root/.workdir/'$i /new_root/usr/"$i" -o index=off
+        echo " - SUCCESS"
+    done
+
+    echo
+    echo -n "[ BLEND ] Setting up /var/lib overlay (applying changes)."
+    rm -rf /new_root/.workdir/varlib
+    mkdir -p /new_root/.upperdir/varlib /new_root/.workdir/varlib /new_root/var/lib /new_root/tmp
+    cd /new_root/tmp; overlayfs-tools merge -l /new_root/var/lib -u /new_root/.upperdir/varlib &>/dev/null; chmod 755 ./overlay-tools-*; ./overlay-tools-* &>/dev/null; rm -f ./overlay-tools-*; cd /
+    mkdir -p /new_root/.upperdir/varlib
+    mount -t overlay overlay -o 'lowerdir=/new_root/var/lib,upperdir=/new_root/.upperdir/varlib,workdir=/new_root/.workdir/varlib' /new_root/var/lib -o index=off
+    echo ' - SUCCESS'
+    echo
+}

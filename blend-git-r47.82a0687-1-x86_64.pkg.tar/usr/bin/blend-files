@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import os
+import subprocess
+
+if os.path.isdir(os.path.expanduser('~/.local/bin/blend_bin')) and not os.path.isfile(os.path.expanduser('~/.local/bin/blend_bin/.associations')):
+    subprocess.call(
+        ['rm', '-rf', os.path.expanduser('~/.local/bin/blend_bin')], shell=False)
+    subprocess.call(
+        ['bash', '-c', 'rm -f "${HOME}/.local/share/applications/blend;"*'], shell=False)
+
+subprocess.call(['mkdir', '-p', os.path.expanduser('~/.local/bin/blend_bin/')])
+subprocess.call(['touch', os.path.expanduser(
+    '~/.local/bin/blend_bin/.associations')], shell=False)

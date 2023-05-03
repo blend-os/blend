@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Rudra Saraswat
+#
+# This file is part of blend.
+#
+# blend is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# blend is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with blend.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os
+import sys
+import glob
+import time
+import shutil
+import socket
+import getpass
+import pexpect
+import argparse
+import subprocess
+
+__version = '2.0.0'
+
+# Colors
+
+
+class colors:
+    reset = '\033[0m'
+    bold = '\033[01m'
+    disable = '\033[02m'
+    underline = '\033[04m'
+    reverse = '\033[07m'
+    strikethrough = '\033[09m'
+    invisible = '\033[08m'
+
+    class fg:
+        black = '\033[30m'
+        red = '\033[31m'
+        green = '\033[32m'
+        orange = '\033[33m'
+        blue = '\033[34m'
+        purple = '\033[35m'
+        cyan = '\033[36m'
+        lightgrey = '\033[37m'
+        darkgrey = '\033[90m'
+        lightred = '\033[91m'
+        lightgreen = '\033[92m'
+        yellow = '\033[93m'
+        lightblue = '\033[94m'
+        pink = '\033[95m'
+        lightcyan = '\033[96m'
+
+    class bg:
+        black = '\033[40m'
+        red = '\033[41m'
+        green = '\033[42m'
+        orange = '\033[43m'
+        blue = '\033[44m'
+        purple = '\033[45m'
+        cyan = '\033[46m'
+        lightgrey = '\033[47m'
+
+# END
+
+# Helper functions
+
+
+def info(msg):
+    print(colors.bold + colors.fg.cyan + '>> i: ' +
+          colors.reset + colors.bold + msg + colors.reset)
+
+
+def error(err):
+    print(colors.bold + colors.fg.red + '>> e: ' +
+          colors.reset + colors.bold + err + colors.reset)
+
+# END
+
+
+distro_map = {
+    'arch': 'docker.io/library/archlinux',
+    'fedora-rawhide': 'docker.io/library/fedora:rawhide',
+    'ubuntu-22.04': 'docker.io/library/ubuntu:22.04',
+    'ubuntu-22.10': 'docker.io/library/ubuntu:22.10'
+}
+
+default_distro = 'arch'
+
+
+def get_distro():
+    try:
+        return distro_map[args.distro]
+    except:
+        error(f"{args.distro} isn't supported by blend.")
+        exit()
+
+
+def list_containers():
+    _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
+                            '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    if len(_list) == 0:
+        info('No containers. Create one by installing a package (`blend install hello`), or manually create one (`blend create-container arch`).')
+    else:
+        info('List of containers:')
+    for i, container in enumerate(_list.splitlines(keepends=False)):
+        if 'blend' in container.split(':')[1]:
+            print(f"{colors.bold}{i}.{colors.reset} {container.split(':')[0]}")
+    return False
+
+
+def check_container(name):
+    _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
+                            '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    for container in _list.splitlines(keepends=False):
+        if ('blend' in container.split(':')[1] or 'distrobox' in container.split(':')[1]) and name.strip() == container.split(':')[0]:
+            return True
+    return False
+
+
+def check_container_status(name):
+    return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
+
+
+def core_start_container(name):
+    subprocess.call(['podman', 'start', name],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    start_time = time.time() - 1000  # workaround
+    if check_container_status(name) != 'running':
+        print('')
+        error('the entry point failed to run; try again later')
+        info("here are the container's logs:")
+        subprocess.call(['podman', 'logs', '--since', str(start_time), name])
+        exit(1)
+
+    logproc = pexpect.spawn(
+        'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=300)
+    logproc.logfile_read = sys.stdout.buffer
+
+    logproc.expect('Completed container setup.')
+    logproc.terminate()
+
+
+def core_create_container():
+    name = args.container_name
+    distro = args.distro
+    info(f'creating container {name}, using {distro}')
+
+    podman_command = []
+
+    # Basic stuff
+    podman_command.extend(['podman', 'create', '--name', name])
+    podman_command.extend(['--hostname', name + '.' + socket.gethostname()])
+    podman_command.extend(['--privileged', '--ipc', 'host'])
+    podman_command.extend(['--network', 'host'])
+    podman_command.extend(['--security-opt', 'label=disable'])
+    podman_command.extend(['--user', 'root:root', '--pid', 'host'])
+    # identify as blend container
+    podman_command.extend(['--label', 'manager=blend'])
+
+    # Env variables
+    podman_command.extend(['--env', 'HOME=' + os.path.expanduser('~')])
+    podman_command.extend(['--env', 'CONTAINER_NAME=' + name])
+
+    # Volumes
+    podman_command.extend(['--volume', '/:/run/host:rslave'])
+    podman_command.extend(['--volume', '/tmp:/tmp:rslave'])
+    podman_command.extend(
+        ['--volume', f"{os.path.expanduser('~')}:{os.path.expanduser('~')}:rslave"])
+    podman_command.extend(
+        ['--volume', f"/run/user/{os.geteuid()}:/run/user/{os.geteuid()}:rslave"])
+
+    # Volumes (config files)
+    podman_command.extend(['--volume', f"/etc/hosts:/etc/hosts:ro"])
+    podman_command.extend(['--volume', f"/etc/localtime:/etc/localtime:ro"])
+    podman_command.extend(
+        ['--volume', f"/etc/resolv.conf:/etc/resolv.conf:ro"])
+
+    # Volumes (files and tools)
+    podman_command.extend(['--volume', '/usr/bin/init-blend:/usr/bin/init-blend:ro',
+                           '--entrypoint', '/usr/bin/init-blend'])  # our entrypoint
+    # and the tool to run commands on the host
+    podman_command.extend(
+        ['--volume', '/usr/bin/host-blend:/usr/bin/host-blend:ro'])
+    podman_command.extend(['--volume', '/var/log/journal'])
+
+    podman_command.extend(['--mount', 'type=devpts,destination=/dev/pts',
+                           '--userns', 'keep-id',
+                           '--annotation', 'run.oci.keep_original_groups=1'])
+
+    podman_command.extend([get_distro()])
+
+    # User (for init-blend)
+    podman_command.extend(['--uid', str(os.geteuid())])
+    podman_command.extend(['--group', str(os.getgid())])
+    podman_command.extend(['--username', getpass.getuser()])
+    podman_command.extend(['--home', os.path.expanduser('~')])
+
+    ret = subprocess.run(podman_command).returncode
+    if ret != 0:
+        if check_container(name):
+            error(f'container {name} already exists')
+            exit(1)
+        error(f'failed to create container {name}')
+        exit(1)
+
+    core_start_container(name)
+
+
+def core_get_output(cmd): return subprocess.run(
+    cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
+
+
+def host_get_output(cmd): return subprocess.run(['bash', '-c', cmd],
+                                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
+
+
+def core_get_retcode(cmd): return subprocess.run(['podman', 'exec', '--user', getpass.getuser(), '-it', args.container_name, 'bash', '-c', cmd],
+                                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+
+
+def core_run_container(cmd):
+    if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
+        subprocess.call(['podman', 'exec', '--user', getpass.getuser(),
+                        '-w', os.getcwd(), '-it', args.container_name, 'bash', '-c', cmd])
+
+
+def core_install_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        if args.noconfirm == True:
+            core_run_container(f'sudo dnf -y install {pkg}')
+        else:
+            core_run_container(f'sudo dnf install {pkg}')
+    elif args.distro == 'arch':
+        if core_get_retcode('[ -f /usr/bin/yay ]') != 0:
+            core_run_container('sudo pacman -Sy')
+            core_run_container(
+                'sudo pacman --noconfirm -Syu --needed git base-devel')
+            core_run_container(
+                'TEMP_DIR="$(mktemp -d)"; cd "${TEMP_DIR}"; git clone https://aur.archlinux.org/yay.git; cd yay; makepkg --noconfirm -si; rm -rf "${TEMP_DIR}"')
+            core_run_container(f'yay -Sy')
+        if args.noconfirm == True:
+            core_run_container(f'yay --noconfirm -Syu {pkg}')
+        else:
+            core_run_container(f'yay -Syu {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        core_run_container(f'sudo apt-get update')
+        if args.noconfirm == True:
+            core_run_container(f'sudo apt-get install -y {pkg}')
+        else:
+            core_run_container(f'sudo apt-get install {pkg}')
+
+
+def core_remove_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        if args.noconfirm == True:
+            core_run_container(f'sudo dnf -y remove {pkg}')
+        else:
+            core_run_container(f'sudo dnf remove {pkg}')
+    elif args.distro == 'arch':
+        if args.noconfirm == True:
+            core_run_container(f'sudo pacman --noconfirm -Rcns {pkg}')
+        else:
+            core_run_container(f'sudo pacman -Rcns {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        if args.noconfirm == True:
+            core_run_container(f'sudo apt-get purge -y {pkg}')
+        else:
+            core_run_container(f'sudo apt-get purge {pkg}')
+        core_run_container(f'sudo apt-get autoremove --purge -y {pkg}')
+
+
+def core_search_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        core_run_container(f'dnf search {pkg}')
+    elif args.distro == 'arch':
+        core_run_container(f'yay -Sy')
+        core_run_container(f'yay {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        core_run_container(f'sudo apt-get update')
+        core_run_container(f'apt-cache search {pkg}')
+
+
+def core_show_pkg(pkg):
+    if args.distro == 'fedora-rawhide':
+        core_run_container(f'dnf info {pkg}')
+    elif args.distro == 'arch':
+        core_run_container(f'yay -Sy')
+        core_run_container(f'yay -Si {pkg}')
+    elif args.distro.startswith('ubuntu-'):
+        core_run_container(f'sudo apt-get update')
+        core_run_container(f'apt-cache show {pkg}')
+
+
+def install_blend():
+    if len(args.pkg) == 0:
+        error('no packages to install')
+
+    for pkg in args.pkg:
+        info(f'installing blend {pkg}')
+        if not check_container(args.container_name):
+            core_create_container()
+        core_install_pkg(pkg)
+
+
+def remove_blend():
+    if len(args.pkg) == 0:
+        error('no packages to remove')
+
+    for pkg in args.pkg:
+        info(f'removing blend {pkg}')
+        if not check_container(args.container_name):
+            error(f"container {args.container_name} doesn't exist")
+        core_remove_pkg(pkg)
+
+
+def search_blend():
+    if len(args.pkg) == 0:
+        error('no packages to search for')
+
+    for pkg in args.pkg:
+        if not check_container(args.container_name):
+            error(f"container {args.container_name} doesn't exist")
+        core_search_pkg(pkg)
+
+
+def show_blend():
+    if len(args.pkg) == 0:
+        error('no packages to show')
+
+    for pkg in args.pkg:
+        info(f'info about blend {pkg}')
+        if not check_container(args.container_name):
+            error(f"container {args.container_name} doesn't exist")
+        core_show_pkg(pkg)
+
+
+def sync_blends():
+    if args.distro == 'fedora-rawhide':
+        core_run_container(f'dnf makecache')
+    elif args.distro == 'arch':
+        core_run_container(f'yay -Syy')
+    elif args.distro.startswith('ubuntu-'):
+        core_run_container(f'sudo apt-get update')
+
+
+def update_blends():
+    if args.distro == 'fedora-rawhide':
+        if args.noconfirm == True:
+            core_run_container(f'sudo dnf -y upgrade')
+        else:
+            core_run_container(f'sudo dnf upgrade')
+    elif args.distro == 'arch':
+        if args.noconfirm == True:
+            core_run_container(f'yay --noconfirm')
+        else:
+            core_run_container(f'yay')
+    elif args.distro.startswith('ubuntu-'):
+        core_run_container(f'sudo apt-get update')
+        if args.noconfirm == True:
+            core_run_container(f'sudo apt-get dist-upgrade -y')
+        else:
+            core_run_container(f'sudo apt-get dist-upgrade')
+    else:
+        error(f'distribution {args.distro} is not supported')
+
+
+def enter_container():
+    podman_args = ['--env', 'LC_ALL=C.UTF-8']
+    sudo = []
+    if os.environ.get('SUDO_USER') == None:
+        podman_args = ['--user', getpass.getuser()]
+    else:
+        sudo = ['sudo', '-u', os.environ.get(
+            'SUDO_USER'), f'PATH={os.path.expanduser("~/.local/share/bin/blend_bin")}:/usr/bin']
+    for name, val in os.environ.items():
+        if name not in ['LANG', 'LC_CTYPE', 'LC_ALL', 'PATH', 'HOST', 'HOSTNAME', 'SHELL'] and not name.startswith('_'):
+            podman_args.append('--env')
+            podman_args.append(name + '=' + val)
+    if os.environ.get('BLEND_COMMAND') == None or os.environ.get('BLEND_COMMAND') == '':
+        if args.pkg == []:
+            if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
+                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args,
+                     '-w', os.getcwd(), '-it', args.container_name, 'bash']))
+            else:
+                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w',
+                     '/run/host' + os.getcwd(), '-it', args.container_name, 'bash']))
+        else:
+            if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
+                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args,
+                     '-w', os.getcwd(), '-it', args.container_name, *args.pkg]))
+            else:
+                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w',
+                     '/run/host' + os.getcwd(), '-it', args.container_name, *args.pkg]))
+    else:
+        if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
+            exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w', os.getcwd(
+            ), '-it', args.container_name, 'bash', '-c', os.environ.get('BLEND_COMMAND')]))
+        else:
+            exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w',
+                 '/run/host' + os.getcwd(), '-it', args.container_name, 'bash']))
+
+
+def create_container():
+    for container in args.pkg:
+        args.container_name = container
+        if container in distro_map.keys() and distro_input == None:
+            args.distro = container
+        core_create_container()
+
+
+def remove_container():
+    for container in args.pkg:
+        info(f'removing container {container}')
+        subprocess.run(['podman', 'stop', container],
+                       stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.run(['podman', 'rm', '-f', container],
+                       stdout=subprocess.DEVNULL)
+        for bin in os.listdir(os.path.expanduser('~/.local/bin/blend_bin')):
+            if bin.endswith(f'.{container}'):
+                os.remove(os.path.join(os.path.expanduser('~/.local/bin/blend_bin'), bin))
+
+
+def start_containers():
+    _list = subprocess.run(['podman', 'ps', '-a', '--no-trunc', '--size', '--format',
+                            '{{.Names}}:{{.Mounts}}'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    if len(_list) == 0:
+        info('No containers. Create one by installing a package (`blend install hello`), or manually create one (`blend create-container -d arch`).')
+    for container in _list.splitlines(keepends=False):
+        container = container.split(':')[0]
+        info(f'starting container {container}')
+        subprocess.call(['podman', 'start', container])
+
+
+if shutil.which('podman') is None:
+    error("podman isn't installed, which is a hard dep")
+    exit(1)
+
+if os.geteuid() == 0 and os.environ['BLEND_ALLOW_ROOT'] == None:
+    error("do not run as root")
+    exit(1)
+
+description = f'''
+{colors.bold}{colors.fg.purple}Version:{colors.reset} {__version}{colors.bold}
+
+Use the 'blendOS Settings' app to create and manage Linux containers, Android apps and immutability configuration.
+
+You can install and submit web apps from the Web Store.
+'''
+
+epilog = f'''
+{colors.bold}Made with {colors.fg.red}\u2764{colors.reset}{colors.bold} by Rudra Saraswat.{colors.reset}
+'''
+
+parser = argparse.ArgumentParser(description=description, usage=argparse.SUPPRESS,
+                                 epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
+command_map = {'enter': enter_container,
+               'exec': enter_container,
+               'create-container': core_create_container,
+               'remove-container': remove_container,
+               'list-containers': list_containers,
+               'start-containers': start_containers,
+               'sync': sync_blends,
+               'help': 'help',
+               'version': 'version'}
+parser.add_argument('command', choices=command_map.keys(),
+                    help=argparse.SUPPRESS)
+parser.add_argument('pkg', action='store', type=str,
+                    nargs='*', help=argparse.SUPPRESS)
+parser.add_argument('-cn', '--container-name', action='store',
+                    nargs=1, metavar='CONTAINER NAME', help=argparse.SUPPRESS)
+parser.add_argument('-y', '--noconfirm',
+                    action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('-d', '--distro', action='store', nargs=1,
+                    metavar='DISTRO', help=argparse.SUPPRESS)
+parser.add_argument('-v', '--version', action='version',
+                    version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
+
+if len(sys.argv) == 1:
+    parser.print_help()
+    exit()
+
+args = parser.parse_intermixed_args()
+
+command = command_map[args.command]
+
+distro_input = args.distro
+args.distro = default_distro if args.distro == None else args.distro[0]
+cn_input = args.container_name
+args.container_name = args.distro if args.container_name == None else args.container_name[0]
+
+if command == 'help':
+    parser.print_help()
+elif command == 'version':
+    parser.parse_args(['--version'])
+else:
+    command()

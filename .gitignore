@@ -1,6 +1,0 @@
-/blend-settings/node_modules/
-/blend-settings/build/
-/blend-settings/dist/
-/blend-settings/package-lock.json
-*.o
-/overlayfs-tools/overlayfs-tools

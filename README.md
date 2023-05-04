@@ -128,13 +128,13 @@ makepkg --nodeps
 
 Once that is done, head over to #Installation
 
-##Prebuilts
+## Prebuilts
 
 Download the two tar files under releases
 
-Head to #Installation 
+Head to # Installation 
 
-##Installation
+## Installation
 
 Install podman from your distro's repo.
 

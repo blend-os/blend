@@ -87,37 +87,34 @@ This is where the guide splits from Arch to non Arch
 
 ### Installing blend in Arch
 
-Install podman from your distro's repo.
+Install `podman`:
 
-Proceed building the package and installing it and any missing dependentcies(if you forgot) with
+`sudo pacman -S podman`
 
-makepkg -si
+Build the package:
 
-The reason why this is the arch version is that -s uses pacman to install dependetcies, which on non arch wouldnt work, and -i would install as a Arch app
+`makepkg -si`
 
-may have unintended consequences on non arch.
+Execute `/etc/profile.d/blend.sh`  to set the path.
 
-run the /etc/profile.d/blend.sh  to set the path
+Navigate to the following location:
 
-Go to location
+`cd /etc/profile.d/blend.sh` 
 
-cd /etc/profile.d/blend.sh 
+Make the script executable:
 
-Set the sh as executable
+`chmod +x blend.sh`
 
-chmod +x blend.sh
+Run the script:
 
-Run the script
+`./blend.sh`
 
-./blend.sh
+Enable the blend-files service:
 
-Enable the blend-files service
+`cd /usr/lib/systemd/user`
 
-cd /usr/lib/systemd/user
+`systemctl --user enable blend-files.service`
 
-systemctl --user enable blend-files.service
-
-#Done
 
 ##Non Arch
 

@@ -35,7 +35,7 @@ Clone the repo for building blend:
 
 `git clone https://github.com/blend-os/blend-pkg`
 
-Then download electron from https://github.com/electron/electron/releases/download/v24.2.0/electron-v24.2.0-linux-x64.zip
+Download electron from https://github.com/electron/electron/releases/latest
 
 Extract the zip and rename it to electron22
 

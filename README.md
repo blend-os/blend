@@ -31,9 +31,9 @@ Install the dependentcies from your package manager except for electron
 
 i.e sudo dnf install pacman fakeroot git binutils npm bzip2 make gcc
 
-Clone the repo for building blend
+Clone the repo for building blend:
 
-git clone https://github.com/blend-os/blend-pkg
+`git clone https://github.com/blend-os/blend-pkg`
 
 Then download electron from https://github.com/electron/electron/releases/download/v24.2.0/electron-v24.2.0-linux-x64.zip
 

@@ -24,7 +24,7 @@ dependentcies require for both methods
 podman 
 
 ## Building Manually
-To build manually, you are goinf to need the following dependentcies
+To build manually, you are going to need the following dependentcies
 
 pacman fakeroot git binutils npm electron(maunaully downloaded from github, see later) bzip2 make gcc
 
@@ -131,6 +131,26 @@ Once that is done, head over to #Installation
 ## Prebuilts
 
 Download the two tar files under releases
+
+Mutable systems install npm from your distros repo
+
+Then use npm install electron -g
+
+Head to # Installation
+
+Immutable systems use below instructions for electron
+
+Download electron from https://github.com/electron/electron/releases/download/v24.2.0/electron-v24.2.0-linux-x64.zip
+
+Extract the zip and rename it to electron22
+
+Go to where you downloaded it
+
+cd Downloads
+
+Copy it to overlay for /usr/lib; in silverblue its /var/usrlocal/lib
+
+sudo cp electron22 -R /var/usrlocal/lib
 
 Head to # Installation 
 

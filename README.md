@@ -116,7 +116,7 @@ Enable the blend-files service
 
 cd /usr/lib/systemd/user
 
-systemctl enable blend-files.service
+systemctl --user enable blend-files.service
 
 #Done
 
@@ -210,7 +210,7 @@ Enable the blend-files service
 
 cd /usr/lib/systemd/user
 
-systemctl enable blend-files.service
+systemctl --user enable blend-files.service
 
 
 Thats the main Install, some goodies below
@@ -219,8 +219,7 @@ To start on log in add the following to .bash_profile
 
 
 blend start-containers
-blend-files &
-disown blend-files
+
 
 
 

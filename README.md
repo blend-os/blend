@@ -19,91 +19,178 @@ Aside from these lines, all the other code in this repository has been written b
 
 It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 
-## Installation
+dependentcies require for both methods
+
+podman 
+
+## Building Manually
+To build manually, you are goinf to need the following dependentcies
+
+pacman fakeroot git binutils npm electron(maunaully downloaded from github, see later) bzip2 make gcc
+
+Install the dependentcies from your package manager except for electron
+
+i.e sudo dnf install pacman fakeroot git binutils npm bzip2 make gcc
+
+Clone the repo for building blend
+
+git clone https://github.com/blend-os/blend-pkg
+
+Then download electron from https://github.com/electron/electron/releases/download/v24.2.0/electron-v24.2.0-linux-x64.zip
+
+Extract the zip and rename it to electron22
+
+Go to where you downloaded it
+
+cd Downloads
+
+Copy it to /usr/lib (on mutable systems)
+
+sudo cp electron22 -R /usr/lib
+
+On immutable systems, you will need to edit the pkgbuild in blend-pkg to set a different directory
+
+Go to blend-pkg
+
+cd blend-pkg
+
+Edit the file with editor of choice
+
+(text editor) PKGBUILD
+
+Edit this line to a directory you can copy to
+
+electronVer="$(sed s/^v// /usr/lib/electron${_electronversion}/version)"
+
+i.e on silverblue /var/usrlocal/lib/electron
+
+Go back to home
+
+cd 
+
+Go to where you downloaded it
+
+cd Downloads
+
+Then copy to chosen directory
+
+sudo cp electron22 -R /var/usrlocal
+
+Go back to home
+
+cd
+
+Go to the blend-pkg folder
+
+cd blend-pkg
+
+This is where the guide splits from Arch to non Arch
+
+##Arch
+
 Install podman from your distro's repo.
-i.e sudo dnf install podman
 
-Clone the files to the computer:
+Proceed building the package and installing it and any missing dependentcies(if you forgot) with
 
-git clone https://github.com/lilkidsuave/blendGuide && cd blendGuide
+makepkg -si
 
-Copy the following to either /home/(user)/.local/bin or /usr/bin
+The reason why this is the arch version is that -s uses pacman to install dependetcies, which on non arch wouldnt work, and -i would install as a Arch app
 
-blend
-blend-files
-blend-system
-blend.hook
-blend.install
-host-blend
-init-blend 
-blend-settings
+may have unintended consequences on non arch.
 
-sudo cp blend blend-files blend-system blend.hook blend.install host-blend init-blend blend-settings /usr/bin
+run the /etc/profile.d/blend.sh  to set the path
 
-Copy the service file to /etc/systemd/system
+Go to location
 
-sudo cp blend-files.service /etc/systemd/system
+cd /etc/profile.d/blend.sh 
 
-Now enter the overlayfs-tools directory
+Set the sh as executable
 
-cd overlayfs-tools
+chmod +x blend.sh
 
-Make the package inside
+Run the script
 
-make
+./blend.sh
 
-Take ownership of /usr/libexec/initscripts
+Enable the blend-files service
 
-sudo chown (user) -R /usr/libexec/initscripts
-
-Enable the blend-files.service
+cd /usr/lib/systemd/user
 
 systemctl enable blend-files.service
 
-The cli is done.
+#Done
 
-possible commands are as follows
+##Non Arch
 
-                'enter': enter_container,
-                'exec': enter_container,
-                'create-container': core_create_container,
-                'remove-container': remove_container,
-                'list-containers': list_containers,
-                'start-containers': start_containers,
-                'sync': sync_blends,
-                'help': 'help',
-                'version': 'version' }
-                'command', choices=command_map.keys(), help=argparse.SUPPRESS)
-                'pkg', action='store', type=str, nargs='*', help=argparse.SUPPRESS)
-                '-cn', '--container-name', action='store', nargs=1, metavar='CONTAINER NAME', help=argparse.SUPPRESS)
-                '-y', '--noconfirm', action='store_true', help=argparse.SUPPRESS)
-                '-d', '--distro', action='store', nargs=1, metavar='DISTRO', help=argparse.SUPPRESS)
-                '-v', '--version', action='version', version=f'%(prog)s {__version}', help=argparse.SUPPRESS)
+Proceed building the app with
 
-to install the gui you need to copy a couple more files and install electron and node js.
- 
-Install nodejs.
+makepkg --nodeps
 
-i.e. sudo dnf install nodejs
- 
-Install Electron
+Once that is done, head over to #Installation
 
-i.e sudo npm install electron -g
+##Prebuilts
 
-Return to main Directory with cd
- 
-Go back to blend folder
+Download the two tar files under releases
 
-cd blend
+Head to #Installation 
 
-Copy the blend-settings.asar to /usr/lib
+##Installation
 
-sudo cp blend-settings.asar /usr/lib
+Install podman from your distro's repo.
 
-Copy the blend-settings executable to /usr/bin or home/(user)/local/bin
+Extract the new tar files to the their own folders
 
-sudo cp blend-settings /usr/bin
+e.g. (blend-git... and blend-settings-git...)
 
+Create a new folder named workspaceBlend
+
+copy all the contents of the extracted tar files to workspaceBlend; merge the folders and skip the replace(dont need buildinfo,mtree or pkginfo)
+
+(so each extracted tar has its own usr directory, so copying that to workpaceBlend will merge them)
+
+Here comes another split
+
+On mutable distros,copy the usr folder to /usr and the etc folder to /etc; merge the folders
+
+Enter workspaceBlend
+
+cd workspaceBlend
+
+sudo cp usr -R /usr
+
+sudo cp etc -R /etc
+
+On immutable distros, rename the /usr folder to what you need based on the overlay filesystem setup you have
+
+On silverblue you would rename to usrlocal and copy to /var/usrlocal; merge the folders
+
+sudo cp usrlocal -R /var/usrlocal
+
+Do the same with /etc if you need
+
+You dont need to on Silverblue though so proceed as normal.
+
+sudo cp etc -R /etc
+
+run the /etc/profile.d/blend.sh  to set the path
+
+Go to location
+
+cd /etc/profile.d/blend.sh 
+
+Set the sh as executable
+
+chmod +x blend.sh
+
+Run the script
+
+./blend.sh
+
+Enable the blend-files service
+
+cd /usr/lib/systemd/user
+
+systemctl enable blend-files.service
 
 
 Thats the main Install, some goodies below
@@ -115,10 +202,7 @@ blend start-containers
 blend-files &
 disown blend-files
 
-To add to application launcher, move the .desktop and the icon to /usr/share/applications
 
-sudo cp blend-settings.desktop blend-settings.png /usr/share/applications
- 
 
              
 

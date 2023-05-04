@@ -19,9 +19,7 @@ Aside from these lines, all the other code in this repository has been written b
 
 It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 
-dependentcies require for both methods
-
-podman 
+Both methods require `podman` as a dependency.
 
 ## Building Manually
 To build manually, you are going to need the following dependentcies

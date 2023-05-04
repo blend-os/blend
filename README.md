@@ -218,13 +218,3 @@ To start on log in add the following to .bash_profile
 
 
 blend start-containers
-
-
-
-
-             
-
-
-
-
-

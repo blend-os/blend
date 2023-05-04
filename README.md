@@ -23,7 +23,7 @@ Both methods require `podman` as a dependency.
 
 ## Building Manually
 
-To build manually, you are going to need the following dependentcies
+To build manually, you are going to need the following dependencies:
 
 pacman fakeroot git binutils npm electron(maunaully downloaded from github, see later) bzip2 make gcc
 

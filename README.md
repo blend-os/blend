@@ -22,6 +22,7 @@ It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 Both methods require `podman` as a dependency.
 
 ## Building Manually
+
 To build manually, you are going to need the following dependentcies
 
 pacman fakeroot git binutils npm electron(maunaully downloaded from github, see later) bzip2 make gcc

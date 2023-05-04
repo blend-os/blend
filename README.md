@@ -85,7 +85,7 @@ cd blend-pkg
 
 This is where the guide splits from Arch to non Arch
 
-##Arch
+### Installing blend in Arch
 
 Install podman from your distro's repo.
 

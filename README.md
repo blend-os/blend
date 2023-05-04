@@ -39,51 +39,41 @@ Download electron from https://github.com/electron/electron/releases/latest
 
 Extract the zip and rename it to electron22
 
-Go to where you downloaded it
+Navigate to Downloads:
 
-cd Downloads
+`cd Downloads`
 
-Copy it to /usr/lib (on mutable systems)
+Copy it to /usr/lib (on mutable systems):
 
-sudo cp electron22 -R /usr/lib
+`sudo cp electron22 -R /usr/lib`
 
 On immutable systems, you will need to edit the pkgbuild in blend-pkg to set a different directory
 
-Go to blend-pkg
+Go to blend-pkg directory:
 
-cd blend-pkg
+`cd blend-pkg`
 
-Edit the file with editor of choice
+Edit the file with the editor of choice:
 
-(text editor) PKGBUILD
+`<text editor> PKGBUILD`
 
-Edit this line to a directory you can copy to
+Edit the line to your correct directory:
 
-electronVer="$(sed s/^v// /usr/lib/electron${_electronversion}/version)"
+`electronVer="$(sed s/^v// /usr/lib/electron${_electronversion}/version)"`
 
 i.e on silverblue /var/usrlocal/lib/electron
 
-Go back to home
+Navigate back to home:
 
-cd 
+`cd  && cd Downloads`
 
-Go to where you downloaded it
+Then copy the content to the selected directory
 
-cd Downloads
+`sudo cp electron22 -R /var/usrlocal`
 
-Then copy to chosen directory
+Navigate back to the blend-pkg folder:
 
-sudo cp electron22 -R /var/usrlocal
-
-Go back to home
-
-cd
-
-Go to the blend-pkg folder
-
-cd blend-pkg
-
-This is where the guide splits from Arch to non Arch
+`cd && cd blend-pkg`
 
 ### Installing blend in Arch
 

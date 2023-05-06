@@ -25,11 +25,11 @@ Both methods require `podman` as a dependency.
 
 To build manually, you are going to need the following dependencies:
 
-pacman fakeroot git binutils npm electron(maunaully downloaded from github, see later) bzip2 make gcc
+pacman fakeroot git binutils npm electron(maunaully downloaded from github, see later) bzip2 make gcc wget curl systemd
 
 Install the dependentcies from your package manager except for electron
 
-i.e sudo dnf install pacman fakeroot git binutils npm bzip2 make gcc
+i.e sudo dnf install pacman fakeroot git binutils npm bzip2 make gcc wget curl systemd
 
 Clone the repo for building blend:
 

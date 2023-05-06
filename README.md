@@ -20,6 +20,17 @@ Aside from these lines, all the other code in this repository has been written b
 It's recommended to use the `blend-settings` UI, instead of the `blend` CLI.
 
 Both methods require `podman` as a dependency.
+## new script
+
+clone repo
+
+enter new folder
+
+mark script nonarchinstall as executable
+
+run script nonarchinstall.sh as sudo
+
+sudo ./nonarchinstall
 
 ## Building Manually
 

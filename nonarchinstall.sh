@@ -1,5 +1,6 @@
 DESTINATION=/usr
 FOLDERNAME=usr
+OVERLAY=
 if ! [ $(id -u) = 0 ]; then
    echo "The script need to be run as root." >&2
    exit 1
@@ -31,6 +32,6 @@ fi
     cd /etc/profile.d 
     chmod +x blend.sh 
     sudo -u ${real_user} ./blend.sh
-    cd ${DESTINATION}/${FOLDERNAME}/lib/systemd/user 
+    cd ${OVERLAY}/${FOLDERNAME}/lib/systemd/user 
     ls
     sudo -u ${real_user} systemctl --user enable blend-files.service

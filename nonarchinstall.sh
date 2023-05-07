@@ -27,7 +27,7 @@ fi
     done 
     mv usr -Tf blendWorkspace 
     mv blendWorkspace -Tf ${FOLDERNAME} 
-    sudo cp -RT ${FOLDERNAME} ${OVERLAY}/${FOLDERNAME} 
+    sudo cp -RT ${FOLDERNAME} ${OVERLAY}${DESTINATION} 
     sudo cp -RT etc /etc
     cd /etc/profile.d 
     chmod +x blend.sh 

@@ -19,7 +19,7 @@ fi
     | wget -qi -
     unzip -q -o '*electron*.zip' -d electron22
     sudo -u ${real_user} git clone https://github.com/blend-os/blend-pkg
-    sudo cp -R electron22 ${DESTINATION}/lib/
+    sudo cp -R electron22 ${OVERLAY}${DESTINATION}/lib/
     cd blend-pkg
     sudo -u ${real_user} makepkg --nodeps
     for f in *.tar.gz; do \
@@ -27,7 +27,7 @@ fi
     done 
     mv usr -Tf blendWorkspace 
     mv blendWorkspace -Tf ${FOLDERNAME} 
-    sudo cp -RT ${FOLDERNAME} ${OVERLAY}/${DESTINATION} 
+    sudo cp -RT ${FOLDERNAME} ${OVERLAY}/${FOLDERNAME} 
     sudo cp -RT etc /etc
     cd /etc/profile.d 
     chmod +x blend.sh 

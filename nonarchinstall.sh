@@ -31,6 +31,6 @@ fi
     cd /etc/profile.d 
     chmod +x blend.sh 
     sudo -u ${real_user} ./blend.sh
-    cd ${DESTINATION}/lib/systemd/user 
+    cd ${DESTINATION}/${FOLDERNAME}/lib/systemd/user 
     ls
     sudo -u ${real_user} systemctl --user enable blend-files.service

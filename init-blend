@@ -363,6 +363,9 @@ for full_file in /usr/bin/*; do
     fi
 done
 
+mkdir -p /usr/share/applications
+touch "/usr/share/applications/empty_file.desktop"
+
 for full_file in /usr/share/applications/*.desktop; do
     file="$(basename "${full_file}")"
 

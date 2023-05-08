@@ -90,7 +90,7 @@ distro_map = {
     'arch': 'docker.io/library/archlinux',
     'fedora-rawhide': 'docker.io/library/fedora:rawhide',
     'ubuntu-22.04': 'docker.io/library/ubuntu:22.04',
-    'ubuntu-22.10': 'docker.io/library/ubuntu:22.10'
+    'ubuntu-23.04': 'docker.io/library/ubuntu:23.04'
 }
 
 default_distro = 'arch'
@@ -428,6 +428,9 @@ def remove_container():
         for bin in os.listdir(os.path.expanduser('~/.local/bin/blend_bin')):
             if bin.endswith(f'.{container}'):
                 os.remove(os.path.join(os.path.expanduser('~/.local/bin/blend_bin'), bin))
+        for app in os.listdir(os.path.expanduser('~/.local/share/applications')):
+            if app.startswith(f'blend;{container};'):
+                os.remove(os.path.join(os.path.expanduser('~/.local/share/applications'), app))
 
 
 def start_containers():

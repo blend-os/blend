@@ -105,6 +105,8 @@ if [[ ! -f '/.init_blend.lock' ]]; then
 
 ###
 
+echo 'nameserver 1.1.1.1' > /etc/resolv.conf
+
 if command -v apt-get &>/dev/null; then
     apt-get update &>/dev/null
     DEBIAN_FRONTEND=noninteractive apt-get -y install bash bc curl less wget apt-utils apt-transport-https dialog \
@@ -383,7 +385,7 @@ for full_file in /usr/share/applications/*.desktop; do
                 mkdir -p "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"; cp "${line:5}" "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"
                 echo "Icon=${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}/$(basename "${line:5}")" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
             else
-                ICON_PATH="$(find /usr/share/icons/hicolor -type f -iname "${line:5}.*" -print -quit 2>/dev/null)"
+                ICON_PATH="$(find /usr/share/icons/hicolor -type f -iname "*${line:5}*" -print -quit 2>/dev/null)"
                 mkdir -p "$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')"
                 FINAL_ICON_PATH="$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')/$(echo "${file%.*}").$(basename "${ICON_PATH}" | sed 's/^.*\.//')"
                 cp "${ICON_PATH}" "${FINAL_ICON_PATH}" &>/dev/null
@@ -445,7 +447,7 @@ inotifywait -m /usr/share/applications /usr/bin -e create,delete,move 2>/dev/nul
                                 mkdir -p "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"; cp "${line:5}" "${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}"
                                 echo "Icon=${HOME}/.local/share/blend/icons/${CONTAINER_NAME}_${file}/$(basename "${line:5}")" >> "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
                             else
-                                ICON_PATH="$(find /usr/share/icons/hicolor -type f -iname "${line:5}.*" -print -quit 2>/dev/null)"
+                                ICON_PATH="$(find /usr/share/icons/hicolor -type f -iname "*${line:5}*" -print -quit 2>/dev/null)"
                                 mkdir -p "$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')"
                                 FINAL_ICON_PATH="$(dirname "${ICON_PATH}" | sed 's/\/usr\/share/'"\/home\/${_uname}"'\/.local\/share/g')/$(echo "${file%.*}").$(basename "${ICON_PATH}" | sed 's/^.*\.//')"
                                 cp "${ICON_PATH}" "${FINAL_ICON_PATH}"

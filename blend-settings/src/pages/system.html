@@ -1,50 +1,8 @@
 <div class="container-fluid d-flex justify-content-center">
   <div class="col-12 col-lg-10 col-xl-8 mx-auto">
     <strong class="mb-0">System Settings</strong>
-    <br><br>
-    <div class="list-group mb-5 shadow">
-      <div class="list-group-item">
-        <div class="row align-items-center">
-          <div class="col">
-            <strong class="mb-0">Disable automatic state creation</strong>
-            <p class="text-muted mb-0">blendOS creates copies of apps and config every 12 hours (and keeps the
-              previous one).</p>
-          </div>
-          <div class="col-auto">
-            <div class="form-check form-switch align-middle">
-              <input class="form-check-input align-middle" type="checkbox" role="switch" id="automatic-state-toggle">
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="list-group-item">
-        <div class="row align-items-center">
-          <div class="col">
-            <strong class="mb-0">Save current state</strong>
-            <p class="text-muted mb-0">Create a copy of the current system state, including apps and config.</p>
-          </div>
-          <div class="col-auto">
-            <div class="form-check form-switch align-middle">
-              <button type="button" id="save-state-btn" onclick="save_state()" class="btn btn-success">Save
-                state</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="list-group-item">
-        <div class="row align-items-center">
-          <div class="col">
-            <strong class="mb-0">Rollback</strong>
-            <p class="text-muted mb-0">Rollback to the most recent state on the next boot. (note: this is irreversible)
-            </p>
-          </div>
-          <div class="col-auto">
-            <div class="form-check form-switch align-middle">
-              <button type="button" class="btn btn-danger" onclick="rollback()" id="rollback-btn">Rollback</button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div style="height: 0.75rem;"></div>
+    <div class="list-group mb-3 shadow">
       <div class="list-group-item d-none" id="app-grouping-item">
         <div class="row align-items-center">
           <div class="col">

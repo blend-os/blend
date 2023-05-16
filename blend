@@ -88,6 +88,10 @@ def error(err):
 
 distro_map = {
     'arch': 'docker.io/library/archlinux',
+    'debian': 'docker.io/library/debian:latest',
+    'neurodebian': 'docker.io/library/neurodebian:nd120',
+    'kali-linux-rolling': 'docker.io/kalilinux/kali-rolling',
+    'kali-linux-rolling': 'docker.io/kalilinux/kali-rolling',
     'fedora-rawhide': 'docker.io/library/fedora:rawhide',
     'ubuntu-22.04': 'docker.io/library/ubuntu:22.04',
     'ubuntu-23.04': 'docker.io/library/ubuntu:23.04'

@@ -88,12 +88,14 @@ def error(err):
 
 distro_map = {
     'arch': 'docker.io/library/archlinux',
+    'almalinux-9': 'quay.io/almalinux/almalinux:9',
     'crystal-linux': 'registry.getcryst.al/crystal/misc/docker:latest',
     'debian': 'docker.io/library/debian:latest',
     'fedora-rawhide': 'docker.io/library/fedora:rawhide',
     'kali-linux-rolling': 'docker.io/kalilinux/kali-rolling',
     'manjaro-linux': 'docker.io/manjarolinux/base:latest',
     'neurodebian-bookworm': 'docker.io/library/neurodebian:nd120',
+    'rocky-linux-9': 'docker.io/rockylinux/rockylinux:9',
     'ubuntu-22.04': 'docker.io/library/ubuntu:22.04',
     'ubuntu-23.04': 'docker.io/library/ubuntu:23.04'
 }

@@ -120,6 +120,8 @@ elif command -v pacman &>/dev/null; then
                              mesa opengl-driver vulkan-intel vulkan-radeon base-devel git inotify-tools &>/dev/null
 
 elif command -v dnf &>/dev/null; then
+    dnf config-manager --set-enabled crb &>/dev/null
+    dnf install -y epel-release &>/dev/null
     dnf install -y --allowerasing bash bc curl wget diffutils findutils dnf-plugins-core gnupg2 less lsof passwd pinentry \
                                     procps-ng vte-profile ncurses util-linux sudo time shadow-utils vulkan mesa-vulkan-drivers \
                                     mesa-dri-drivers inotify-tools &>/dev/null

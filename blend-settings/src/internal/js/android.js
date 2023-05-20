@@ -15,7 +15,7 @@ function init_waydroid() {
             }
             require('child_process').spawn('sh', ['-c', 'pkexec waydroid upgrade -o; waydroid session stop; waydroid session start'])
             setTimeout(() => { postMessage('success') }, 2000)
-        }, 4000)
+        }, 8000)
         `
     )
     init_worker.onmessage = e => {

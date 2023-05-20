@@ -105,8 +105,6 @@ if [[ ! -f '/.init_blend.lock' ]]; then
 
 ###
 
-echo 'nameserver 1.1.1.1' > /etc/resolv.conf
-
 if command -v apt-get &>/dev/null; then
     apt-get update &>/dev/null
     DEBIAN_FRONTEND=noninteractive apt-get -y install bash bc curl less wget apt-utils apt-transport-https dialog \
@@ -320,6 +318,7 @@ if ! grep -q "^${_uname}:" /etc/group; then
 		printf "%s:x:%s:" "$_uname" "$_cgid" >> /etc/group
 	fi
 fi
+userdel -r ubuntu &>/dev/null
 useradd --uid "$_cuid" --gid "$_cgid" --shell "/bin/bash" --no-create-home --home "$_uhome" "$_uname" &>/dev/null
 
 chown root /etc/sudo.conf

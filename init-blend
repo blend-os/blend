@@ -325,7 +325,11 @@ if [[ $_cuid -eq 1000 ]] && grep -q ubuntu /etc/passwd; then
     grep -v ubuntu /etc/group > /etc/group.tmp
     mv /etc/passwd.tmp /etc/passwd
     mv /etc/group.tmp /etc/group
-    echo -e '\n'"$_uname"':x:1000\n' >> /etc/group
+fi
+if ! grep -q "^${_uname}:" /etc/group; then
+	if ! groupadd --force --gid "$_cgid" "$_uname"; then
+		printf "%s:x:%s:" "$_uname" "$_cgid" >> /etc/group
+	fi
 fi
 useradd --uid "$_cuid" --gid "$_cgid" --shell "/bin/bash" --no-create-home --home "$_uhome" "$_uname" &>/dev/null
 

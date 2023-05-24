@@ -313,11 +313,6 @@ fi
 if ! grep -q "\"${_uname}\" ALL = (root) NOPASSWD:ALL" /etc/sudoers.d/sudoers &>/dev/null; then
 	printf "\"%s\" ALL = (root) NOPASSWD:ALL\n" "$_uname" >> /etc/sudoers.d/sudoers
 fi
-if ! grep -q "^${_uname}:" /etc/group; then
-	if ! groupadd --force --gid "$_cgid" "$_uname"; then
-		printf "%s:x:%s:" "$_uname" "$_cgid" >> /etc/group
-	fi
-fi
 if [[ $_cuid -eq 1000 ]] && grep -q ubuntu /etc/passwd; then
     userdel -r ubuntu &>/dev/null
     groupdel ubuntu &> /dev/null

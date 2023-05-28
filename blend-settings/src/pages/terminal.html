@@ -69,12 +69,24 @@
                 experimentalCharAtlas: 'dynamic',
                 theme: {
                     background: '#242430'
-                }
+                },
+                fontFamily: 'JetBrains Mono'
             });
 
             once = true
 
             term.loadAddon(fit)
+
+            term.attachCustomKeyEventHandler((arg) => { 
+                if (arg.ctrlKey && arg.shiftKey && arg.code === "KeyC" && arg.type === "keydown") {
+                    const selection = term.getSelection();
+                    if (selection) {
+                        navigator.clipboard.writeText(selection);
+                        return false;
+                    }
+                }
+                return true;
+            }); 
 
             var term_e = document.getElementById('term');
             term.open(term_e);

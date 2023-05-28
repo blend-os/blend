@@ -44,7 +44,7 @@ function createTerminalWindow() {
 
   terminalWindow.loadFile('src/pages/terminal.html')
 
-  terminalWindow.setMenu(null)
+  // terminalWindow.setMenu(null)
 }
 
 function loadTerminalWindow(title, cmd) {

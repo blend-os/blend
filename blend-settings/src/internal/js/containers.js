@@ -33,7 +33,7 @@ async function remove_container(name) {
     let rm_worker = new Worker(
         `data:text/javascript,
         require('child_process').spawnSync('podman', ['stop', '-t', '0', '${name}'], { encoding: 'utf8' })
-        require('child_process').spawnSync('podman', ['rm', '-f', '${name}'], { encoding: 'utf8' })
+        require('child_process').spawnSync('blend', ['remove-container', '${name}'], { encoding: 'utf8' })
         postMessage('')
         `
     )

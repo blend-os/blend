@@ -9,6 +9,7 @@ if os.path.isdir(os.path.expanduser('~/.local/bin/blend_bin')) and not os.path.i
     subprocess.call(
         ['bash', '-c', 'rm -f "${HOME}/.local/share/applications/blend;"*'], shell=False)
 
+subprocess.call(['mkdir', '-p', os.path.expanduser('~/.local/share/applications/')])
 subprocess.call(['mkdir', '-p', os.path.expanduser('~/.local/bin/blend_bin/')])
 subprocess.call(['touch', os.path.expanduser(
     '~/.local/bin/blend_bin/.associations')], shell=False)

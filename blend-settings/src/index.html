@@ -4,7 +4,15 @@
   <title>Settings</title>
 
   <!-- Import bootstrap v5.0. -->
-  <link href="external/css/bootstrap.min.css" rel="stylesheet">f
+  <link href="external/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Import common styling. -->
+  <link href="internal/css/common.css" rel="stylesheet">
+</head>
+
+<body style="height: 100%;">
+  <br>
+  <div class="topnav">
     <div class="btn-group" id="settings-tabs" role="group" aria-label="Stores">
       <button class="btn btn-outline-light active shadow-none" id="containers-button" onclick="page('containers')">Linux
         Containers</button>
@@ -17,7 +25,7 @@
   <!-- Import bootstrap JS bundle. -->
   <script src="external/js/bootstrap.bundle.min.js"></script>
 
-  <script>          
+  <script>
     const Sortable = require('sortablejs')
     const child_process = require('child_process')
     const path = require('path')

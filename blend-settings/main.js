@@ -2,10 +2,12 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const pty = require("node-pty");
 
-var mainWindow, terminalWindow, ptyProcess
+var mainWindow, terminalWindow, packageWindow, ptyProcess
 
 app.commandLine.appendSwitch('enable-transparent-visuals');
 app.disableHardwareAcceleration();
+
+require('@electron/remote/main').initialize()
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -30,7 +32,7 @@ function createWindow() {
 }
 
 function createTerminalWindow() {
-  terminalWindow = new BrowserWindow({
+  let t_window_settings = {
     minWidth: 800,
     minHeight: 600,
     webPreferences: {
@@ -40,11 +42,41 @@ function createTerminalWindow() {
     },
     autoHideMenuBar: true,
     show: false
-  })
+  }
+
+  if (process.argv.length > 2) {
+    if (process.argv[2] == 'package') {
+      t_window_settings['frame'] = false
+    }
+  }
+
+  terminalWindow = new BrowserWindow(t_window_settings)
 
   terminalWindow.loadFile('src/pages/terminal.html')
 
   // terminalWindow.setMenu(null)
+}
+
+function createPackageWindow() {
+  packageWindow = new BrowserWindow({
+    minWidth: 450,
+    minHeight: 450,
+    width: 450,
+    height: 450,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+      sandbox: false
+    },
+    autoHideMenuBar: true
+  })
+
+  packageWindow.loadFile('src/package-installer.html')
+
+  require("@electron/remote/main").enable(packageWindow.webContents)
+
+  // packageWindow.setMenu(null)
 }
 
 function loadTerminalWindow(title, cmd) {
@@ -98,6 +130,8 @@ function loadTerminalWindow(title, cmd) {
           ptyProcess.destroy()
         }
       })
+    } else if (terminalWindow.getTitle().startsWith('Package installation')) {
+      e.preventDefault()
     } else {
       terminalWindow.hide()
       ptyProcess.destroy()
@@ -128,6 +162,8 @@ function loadTerminalWindow(title, cmd) {
       terminalWindow.hide()
       if (title.startsWith('Creating container: ')) {
         mainWindow.webContents.send("container-created")
+      } else if (title.startsWith('Package installation')) {
+        packageWindow.webContents.send("installation-complete")
       }
     }
   })
@@ -142,17 +178,20 @@ function loadTerminalWindow(title, cmd) {
 app.whenReady().then(() => {
   app.allowRendererProcessReuse = false
 
-  setTimeout(() => {
-    createWindow();
-  }, 1000);
+  if (process.argv.length > 2) {
+    if (process.argv[2] == 'package') {
+      createPackageWindow()
+    }
+  } else {
+    setTimeout(() => {
+      createWindow()
+    }, 1000);
+  }
+
   createTerminalWindow()
 
   ipcMain.on('create-term', (event, data) => {
     loadTerminalWindow(data['title'], data['cmd'])
-  })
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 

@@ -121,7 +121,7 @@ function waydroid_open_settings() {
     require('child_process').spawn('waydroid', ['app', 'launch', 'com.android.settings'])
 }
 
-require('fs').stat('/var/lib/waydroid', (err, stat) => {
+require('fs').stat('/var/lib/waydroid/waydroid.prop', (err, stat) => {
     if (err == null) {
         document.getElementById('waydroid-initialize-settings').classList.add('d-none')
         document.getElementById('waydroid-initialized-settings').classList.remove('d-none')

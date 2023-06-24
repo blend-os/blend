@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Package Installer</title>
+    <style>
+        * {
+            user-select: none !important;
+            -webkit-user-drag: none !important;
+        }
+
+        html,
+        head,
+        body {
+            background-color: #EBEBEB;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cantarell';
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .padding {
+            margin: 1.2rem;
+        }
+
+        h1 {
+            font-weight: 900;
+            font-size: 2.5rem;
+        }
+        
+        button {
+            background-color: #3584E4;
+            border-style: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Cantarell';
+            font-weight: 600;
+            padding: 15px 25px 15px 25px;
+            font-size: 20px;
+
+            transition: 0.3s;
+        }
+
+        button:disabled {
+            background-color: #619cdf;
+        }
+
+        p {
+            margin: 0 8px 0 8px;
+            text-align: center;
+            font-size: 1.05rem;
+            line-height: 150%;
+        }
+
+        button:hover {
+            background-color: #3271be;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <div class="center">
+        <h1>Package Installer</h1>
+
+        <div class="padding"></div>
+
+        <img id="packaging-format" width="120px">
+
+        <div class="padding"></div>
+
+        <button id="install-button" onclick="install_package()">Install package</button>
+
+        <div class="padding"></div>
+
+        <select id="source_select"></select>
+    </div>
+
+    <script>
+        const ipc = require('electron').ipcRenderer
+
+        package_name = require('path').basename(require('@electron/remote').process.argv[3])
+        package_type = 'deb'
+
+        if (package_name.endsWith('.deb')) {
+            document.getElementById('packaging-format').src = '../static/DEB.svg'
+            package_type = 'deb'
+
+            document.getElementById('source_select').innerHTML = `
+                <option>Debian</option>
+                <option>Ubuntu 23.04</option>
+                <option>Ubuntu 22.04</option>
+                <option>Kali Linux</option>
+                <option>Neurodebian Bookworm</option>
+            `
+        } else if (package_name.endsWith('.rpm')) {
+            document.getElementById('packaging-format').src = '../static/RPM.svg'
+            package_type = 'rpm'
+            document.getElementById('source_select').innerHTML = `
+                <option>Fedora 38</option>
+                <option>AlmaLinux 9</option>
+                <option>Rocky Linux</option>
+            `
+        } else if (package_name.endsWith('.apk')) {
+            document.getElementById('packaging-format').src = '../static/APK.svg'
+            package_type = 'apk'
+            document.getElementById('source_select').outerHTML = ''
+
+            require('fs').stat('/var/lib/waydroid/waydroid.prop', (err, stat) => {
+                if (err != null) {
+                    document.getElementById('install-button').outerHTML = "<p>You'll need to initialize Android app support from the <b>blendOS Settings</b> app first.</p>"
+                }
+            })
+        } else if (package_name.includes('.pkg.tar')) {
+            document.getElementById('packaging-format').src = '../static/PKG.svg'
+            package_type = 'pkg'
+            document.getElementById('source_select').innerHTML = `
+                <option>Arch</option>
+                <option>Crystal Linux</option>
+            `
+        }
+
+        function install_package() {
+            if (package_type == 'apk') {
+                document.getElementById('install-button').disabled = true
+                require('child_process').spawnSync('waydroid', ['app', 'install', package_name])
+                document.getElementById('install-button').innerHTML = 'Installed'
+            } else {
+                package_source = document.getElementById('source_select').options[document.getElementById('source_select').selectedIndex].text.toLowerCase().replace(' ', '-')
+                timestamp = Math.floor(new Date().getTime() / 1000)
+                install_dir = `${require('os').homedir()}/.cache/package-installer/${timestamp}`
+                require('child_process').spawnSync('mkdir', ['-p', install_dir])
+                require('child_process').spawnSync('cp', [require('@electron/remote').process.argv[3], install_dir])
+                install_command = ''
+                if (package_type == 'deb') {
+                    install_command = `apt install -y ${install_dir}/${package_name}`
+                } else if (package_type == 'rpm') {
+                    install_command = `dnf install -y ${install_dir}/${package_name}`
+                } else if (package_type == 'pkg') {
+                    install_command = `pacman -U --noconfirm ${install_dir}/${package_name}`
+                }
+
+                document.getElementById('install-button').disabled = true
+
+                if (!require('child_process').spawnSync('podman', ['container', 'exists', package_source]).status) {
+                    ipc.send("create-term", { 'title': `Package installation`, 'cmd': `sudo.${package_source} ${install_command} && echo -e '\\nInstallation was successful.' || echo -e '\\nInstallation was unsuccessful.'; sleep 5` });
+                } else {
+                    ipc.send("create-term", { 'title': `Package installation`, 'cmd': `blend create-container -cn ${package_source} -d ${package_source}; (sudo.${package_source} ${install_command} && echo -e '\\nInstallation was successful.' || echo -e '\\nInstallation was unsuccessful.'; sleep 5)` });
+                }
+
+                document.getElementById('install-button').innerHTML = 'Installing'
+
+                ipc.on('installation-complete', () => {
+                    document.getElementById('install-button').innerHTML = 'Installed'
+                })
+                require('child_process').spawnSync('rm', ['-rf', install_dir])
+            }
+        }
+    </script>
+</body>
+
+</html>

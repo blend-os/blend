@@ -132,8 +132,9 @@
         function install_package() {
             if (package_type == 'apk') {
                 document.getElementById('install-button').disabled = true
-                require('child_process').spawnSync('waydroid', ['app', 'install', package_name])
+                require('child_process').spawnSync('waydroid', ['app', 'install', require('@electron/remote').process.argv[3]])
                 document.getElementById('install-button').innerHTML = 'Installed'
+                require('child_process').spawnSync('rm', ['-rf', install_dir])
             } else {
                 package_source = document.getElementById('source_select').options[document.getElementById('source_select').selectedIndex].text.toLowerCase().replace(' ', '-')
                 timestamp = Math.floor(new Date().getTime() / 1000)
@@ -161,8 +162,8 @@
 
                 ipc.on('installation-complete', () => {
                     document.getElementById('install-button').innerHTML = 'Installed'
+                    require('child_process').spawnSync('rm', ['-rf', install_dir])
                 })
-                require('child_process').spawnSync('rm', ['-rf', install_dir])
             }
         }
     </script>

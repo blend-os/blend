@@ -183,9 +183,7 @@ app.whenReady().then(() => {
       createPackageWindow()
     }
   } else {
-    setTimeout(() => {
-      createWindow()
-    }, 1000);
+    createWindow()
   }
 
   createTerminalWindow()

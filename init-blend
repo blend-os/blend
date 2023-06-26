@@ -379,8 +379,6 @@ touch "/usr/share/applications/empty_file.desktop"
 for full_file in /usr/share/applications/*.desktop; do
     file="$(basename "${full_file}")"
 
-    mkdir -p "${HOME}/.local/share/applications"
-
     echo -n > "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
 
     while read -r line; do
@@ -441,8 +439,6 @@ inotifywait -m /usr/share/applications /usr/bin -e create,delete,move 2>/dev/nul
         ( if [[ "$dir" == "/usr/share/applications/" ]]; then
             if [[ "$action" == *"CREATE"* ]] || [[ "$action" == *"MOVED_TO"* ]]; then
                 if [[ "$file" == *'.desktop' ]]; then
-                    mkdir -p "${HOME}/.local/share/applications"
-
                     echo -n > "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
 
                     while read -r line; do

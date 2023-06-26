@@ -13,3 +13,5 @@ subprocess.call(['mkdir', '-p', os.path.expanduser('~/.local/share/applications/
 subprocess.call(['mkdir', '-p', os.path.expanduser('~/.local/bin/blend_bin/')])
 subprocess.call(['touch', os.path.expanduser(
     '~/.local/bin/blend_bin/.associations')], shell=False)
+subprocess.call(['touch', os.path.expanduser(
+    '~/.local/share/applications/.empty')], shell=False)

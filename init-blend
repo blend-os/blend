@@ -110,19 +110,19 @@ if command -v apt-get &>/dev/null; then
     DEBIAN_FRONTEND=noninteractive apt-get -y install bash bc curl less wget apt-utils apt-transport-https dialog \
                                                 diffutils findutils gnupg2 sudo time util-linux libnss-myhostname \
                                                 lsof ncurses-base passwd inotify-tools pinentry-curses libegl1-mesa \
-                                                libgl1-mesa-glx libvulkan1 mesa-vulkan-drivers &>/dev/null
+                                                libgl1-mesa-glx libvulkan1 mesa-vulkan-drivers dbus &>/dev/null
 
 elif command -v pacman &>/dev/null; then
     pacman --noconfirm -Syyu &>/dev/null
     pacman --noconfirm -Sy bash bc curl wget diffutils findutils gnupg sudo time util-linux vte-common lsof ncurses pinentry \
-                             mesa opengl-driver vulkan-intel vulkan-radeon base-devel git inotify-tools &>/dev/null
+                             mesa opengl-driver vulkan-intel vulkan-radeon base-devel git inotify-tools dbus dbus-broker &>/dev/null
 
 elif command -v dnf &>/dev/null; then
     dnf config-manager --set-enabled crb &>/dev/null
     dnf install -y epel-release &>/dev/null
     dnf install -y --allowerasing bash bc curl wget diffutils findutils dnf-plugins-core gnupg2 less lsof passwd pinentry \
                                     procps-ng vte-profile ncurses util-linux sudo time shadow-utils vulkan mesa-vulkan-drivers \
-                                    mesa-dri-drivers inotify-tools &>/dev/null
+                                    mesa-dri-drivers inotify-tools dbus &>/dev/null
 
 fi
 

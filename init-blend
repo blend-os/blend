@@ -386,7 +386,7 @@ for full_file in /usr/share/applications/*.desktop; do
     chmod 755 "${HOME}/.local/share/applications/blend;${CONTAINER_NAME};${file}"
 done
 
-echo "Completed container setup."
+echo "Started container."
 
 mkdir -p /usr/share/applications /usr/bin
 inotifywait -m /usr/share/applications /usr/bin -e create,delete,move 2>/dev/null |

@@ -18,6 +18,13 @@ function update_system() {
 }
 
 function check_system_update() {
+    if (require('fs').existsSync('/.update')) {
+        document.getElementById('update-btn').onclick = () => {
+            require('child_process').spawnSync('reboot')
+        }
+        document.getElementById('update-btn').textContent = 'Reboot'
+        document.getElementById('update-btn').disabled = false
+    }
     let start_update_worker = new Worker(
         `data:text/javascript,
         let s = require('child_process').spawnSync('systemctl', ['is-active', '--quiet', 'akshara-system-update']).status

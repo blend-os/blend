@@ -50,7 +50,7 @@ function install_aurora_store() {
     let aurora_store_worker = new Worker(
         `data:text/javascript,
             require('child_process').spawnSync('sh', ['-c', 'mkdir -p ~/.cache/blend-settings; rm -f ~/.cache/blend-settings/aurora.apk'])
-            let s1 = require('child_process').spawnSync('sh', ['-c', 'wget -O ~/.cache/blend-settings/aurora.apk https://gitlab.com/AuroraOSS/AuroraStore/uploads/bbc1bd5a77ab2b40bbf288ccbef8d1f0/AuroraStore_4.1.1.apk']).status
+            let s1 = require('child_process').spawnSync('sh', ['-c', 'wget -O ~/.cache/blend-settings/aurora.apk https://auroraoss.com/AuroraStore/Stable/AuroraStore_4.4.1.apk']).status
             if (s1 != 0) {
                 postMessage('failed')
             } else {

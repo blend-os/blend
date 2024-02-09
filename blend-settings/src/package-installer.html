@@ -97,18 +97,14 @@
 
             document.getElementById('source_select').innerHTML = `
                 <option>Debian</option>
-                <option>Ubuntu 23.04</option>
                 <option>Ubuntu 22.04</option>
-                <option>Kali Linux</option>
-                <option>Neurodebian Bookworm</option>
             `
         } else if (package_name.endsWith('.rpm')) {
             document.getElementById('packaging-format').src = '../static/RPM.svg'
             package_type = 'rpm'
             document.getElementById('source_select').innerHTML = `
-                <option>Fedora 38</option>
-                <option>AlmaLinux 9</option>
-                <option>Rocky Linux</option>
+                <option>Fedora 39</option>
+                <option>CentOS</option>
             `
         } else if (package_name.endsWith('.apk')) {
             document.getElementById('packaging-format').src = '../static/APK.svg'
@@ -117,15 +113,14 @@
 
             require('fs').stat('/var/lib/waydroid/waydroid.prop', (err, stat) => {
                 if (err != null) {
-                    document.getElementById('install-button').outerHTML = "<p>You'll need to initialize Android app support from the <b>blendOS Settings</b> app first.</p>"
+                    document.getElementById('install-button').outerHTML = "<p>You'll need to initialize Android app support from the <b>System</b> app first.</p>"
                 }
             })
         } else if (package_name.includes('.pkg.tar')) {
             document.getElementById('packaging-format').src = '../static/PKG.svg'
             package_type = 'pkg'
             document.getElementById('source_select').innerHTML = `
-                <option>Arch</option>
-                <option>Crystal Linux</option>
+                <option>Arch Linux</option>
             `
         }
 

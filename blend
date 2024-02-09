@@ -144,7 +144,7 @@ def core_start_container(name, new_container=False):
         exit(1)
 
     logproc = pexpect.spawn(
-        'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=300)
+        'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=3600)
     logproc.logfile_read = sys.stdout.buffer
 
     logproc.expect('Started container.')

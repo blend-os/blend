@@ -136,7 +136,7 @@ def check_container_status(name):
     return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
 
 
-def core_start_container(name):
+def core_start_container(name, new_container=False):
     subprocess.call(['podman', 'start', name],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -160,6 +160,10 @@ def core_create_container():
     name = args.container_name
     distro = args.distro
     info(f'creating container {name}, using {distro}')
+
+    if check_container(name):
+       error(f'container {name} already exists')
+       exit(1)
 
     podman_command = []
 
@@ -213,9 +217,6 @@ def core_create_container():
 
     ret = subprocess.run(podman_command).returncode
     if ret != 0:
-        if check_container(name):
-            error(f'container {name} already exists')
-            exit(1)
         error(f'failed to create container {name}')
         exit(1)
 
@@ -381,6 +382,9 @@ def update_blends():
 
 
 def enter_container():
+    if check_container_status(args.container_name) != 'running':
+        core_start_container(args.container_name)
+
     podman_args = ['--env', 'LC_ALL=C.UTF-8']
     sudo = []
     if os.environ.get('SUDO_USER') == None:
@@ -461,7 +465,7 @@ if os.geteuid() == 0 and os.environ['BLEND_ALLOW_ROOT'] == None:
 description = f'''
 {colors.bold}{colors.fg.purple}Version:{colors.reset} {__version}{colors.bold}
 
-Use the 'blendOS Settings' app to create and manage Linux containers, Android apps and immutability configuration.
+Use the 'blendOS Settings' app to create and manage Linux containers, Android apps and for system configuration.
 
 You can install and submit web apps from the Web Store.
 '''

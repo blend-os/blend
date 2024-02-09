@@ -87,19 +87,14 @@ def error(err):
 
 
 distro_map = {
-    'arch': 'docker.io/library/archlinux',
-    'almalinux-9': 'quay.io/almalinux/almalinux:9',
-    'crystal-linux': 'registry.getcryst.al/crystal/misc/docker:latest',
-    'debian': 'docker.io/library/debian:latest',
-    'fedora-38': 'docker.io/library/fedora:38',
-    'kali-linux': 'docker.io/kalilinux/kali-rolling',
-    'neurodebian-bookworm': 'docker.io/library/neurodebian:nd120',
-    'rocky-linux': 'docker.io/rockylinux/rockylinux:9',
-    'ubuntu-22.04': 'docker.io/library/ubuntu:22.04',
-    'ubuntu-23.04': 'docker.io/library/ubuntu:23.04'
+    'arch-linux': 'docker.io/library/archlinux',
+    'debian': 'quay.io/toolbx-images/debian-toolbox:testing',
+    'fedora-39': 'registry.fedoraproject.org/fedora-toolbox:39',
+    'centos': 'quay.io/toolbx-images/centos-toolbox:latest',
+    'ubuntu-22.04': 'quay.io/toolbx/ubuntu-toolbox:22.04',
 }
 
-default_distro = 'arch'
+default_distro = 'arch-linux'
 
 
 def get_distro():
@@ -152,7 +147,7 @@ def core_start_container(name, new_container=False):
         'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=300)
     logproc.logfile_read = sys.stdout.buffer
 
-    logproc.expect('Completed container setup.')
+    logproc.expect('Started container.')
     logproc.terminate()
 
 

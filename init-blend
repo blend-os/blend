@@ -62,29 +62,7 @@ while true; do
     esac
 done
 
-cat << 'EOF'
-
-
- ▄▄▄▄    ██▓    ▓█████  ███▄    █ ▓█████▄ 
-▓█████▄ ▓██▒    ▓█   ▀  ██ ▀█   █ ▒██▀ ██▌
-▒██▒ ▄██▒██░    ▒███   ▓██  ▀█ ██▒░██   █▌
-▒██░█▀  ▒██░    ▒▓█  ▄ ▓██▒  ▐▌██▒░▓█▄   ▌
-░▓█  ▀█▓░██████▒░▒████▒▒██░   ▓██░░▒████▓ 
-░▒▓███▀▒░ ▒░▓  ░░░ ▒░ ░░ ▒░   ▒ ▒  ▒▒▓  ▒ 
-▒░▒   ░ ░ ░ ▒  ░ ░ ░  ░░ ░░   ░ ▒░ ░ ▒  ▒ 
- ░    ░   ░ ░      ░      ░   ░ ░  ░ ░  ░ 
- ░          ░  ░   ░  ░         ░    ░    
-      ░                            ░      
-
-===================
-      Credits
-===================
-
-* NVIDIA driver support - Luca Di Maio (from Distrobox)
-EOF
-
-echo
-echo 'Starting blend... (this may take a few minutes)'
+echo 'Starting container... (this may take a few minutes)'
 echo
 
 bmount() {

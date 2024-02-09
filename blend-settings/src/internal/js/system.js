@@ -22,8 +22,11 @@ function check_system_update() {
         document.getElementById('update-btn').onclick = () => {
             require('child_process').spawnSync('reboot')
         }
+
         document.getElementById('update-btn').textContent = 'Reboot'
         document.getElementById('update-btn').disabled = false
+
+        return;
     }
     let start_update_worker = new Worker(
         `data:text/javascript,

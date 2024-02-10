@@ -128,11 +128,17 @@ def check_container(name):
 
 
 def check_container_status(name):
-    return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
+    if os.environ.get('SUDO_USER') == None:
+        return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
+    else:
+        return host_get_output(f"sudo -u {os.environ.get('SUDO_USER')} podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
 
 
 def core_start_container(name, new_container=False):
-    subprocess.call(['podman', 'start', name],
+    sudo = []
+    if os.environ.get('SUDO_USER') != None:
+        sudo = ['sudo', '-u', os.environ.get('SUDO_USER')]
+    subprocess.call([*sudo, 'podman', 'start', name],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     start_time = time.time() - 1000  # workaround

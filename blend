@@ -149,8 +149,12 @@ def core_start_container(name, new_container=False):
         subprocess.call(['podman', 'logs', '--since', str(start_time), name])
         exit(1)
 
-    logproc = pexpect.spawn(
-        'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=3600)
+    if os.environ.get('SUDO_USER') == None:
+        logproc = pexpect.spawn(
+            'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=3600)
+    else:
+        logproc = pexpect.spawn(
+            'sudo', args=['-u', os.environ.get('SUDO_USER'), 'podman', 'logs', '-f', '--since', str(start_time), name], timeout=3600)
     logproc.logfile_read = sys.stdout.buffer
 
     logproc.expect('Started container.')

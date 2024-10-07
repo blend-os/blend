@@ -92,6 +92,7 @@ distro_map = {
     'fedora-39': 'registry.fedoraproject.org/fedora-toolbox:39',
     'centos': 'quay.io/toolbx-images/centos-toolbox:latest',
     'ubuntu-22.04': 'quay.io/toolbx/ubuntu-toolbox:22.04',
+    'ubuntu-24.04-lts': 'quay.io/toolbx/ubuntu-toolbox:24.04',
 }
 
 default_distro = 'arch-linux'

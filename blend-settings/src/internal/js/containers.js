@@ -200,7 +200,7 @@ function update_association_list() {
                 <div class="row align-items-center">
                     <div class="col">
                         <strong class="mb-0">No associations.</strong>
-                        <p class="text-muted mb-0">Add one from above. It's recommended to add associations for each of the supported package managers for easier usage (apt, pacman and dnf).</p>
+                        <p class="text-muted mb-0">Add one from above. It's recommended to add associations for each of the supported package managers for easier usage (apt, yum and dnf).</p>
                     </div>
                 </div>
             </div>

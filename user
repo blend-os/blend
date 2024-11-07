@@ -164,7 +164,11 @@ def create_container(container_name, distro):
     if subprocess.run(['podman', 'container', 'exists', container_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
         error(f'container {colors.bold}{container_name}{colors.reset} already exists')
         exit(1)
-    exit(subprocess.run(['blend', 'create-container', '-cn', container_name, '-d', distro]).returncode)
+    args = ['blend', 'create-container', '-cn', container_name]
+    # blend handles no distro being specified already
+    if distro:
+        args.extend(['-d', distro])
+    exit(subprocess.run(args).returncode)
 
 @cli.command("delete-container")
 @click.argument('container')

@@ -1,12 +1,8 @@
 #!/usr/bin/python3
 
 import os
-import yaml
 import click
 import subprocess
-
-from urllib.request import urlopen
-
 
 class colors:
     reset = '\033[0m'

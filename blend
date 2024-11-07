@@ -103,7 +103,7 @@ def get_distro():
         return distro_map[args.distro]
     except:
         error(f"{args.distro} isn't supported by blend.")
-        exit()
+        exit(1)
 
 
 def list_containers():

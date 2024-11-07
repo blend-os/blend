@@ -19,7 +19,6 @@
 
 import os
 import sys
-import glob
 import time
 import shutil
 import socket
@@ -129,7 +128,7 @@ def check_container(name):
 
 
 def check_container_status(name):
-    if os.environ.get('SUDO_USER') == None:
+    if os.environ.get('SUDO_USER'):
         return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
     else:
         return host_get_output(f"sudo -u {os.environ.get('SUDO_USER')} podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
@@ -137,7 +136,7 @@ def check_container_status(name):
 
 def core_start_container(name, new_container=False):
     sudo = []
-    if os.environ.get('SUDO_USER') != None:
+    if os.environ.get('SUDO_USER'):
         sudo = ['sudo', '-u', os.environ.get('SUDO_USER')]
     subprocess.call([*sudo, 'podman', 'start', name],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -150,7 +149,7 @@ def core_start_container(name, new_container=False):
         subprocess.call(['podman', 'logs', '--since', str(start_time), name])
         exit(1)
 
-    if os.environ.get('SUDO_USER') == None:
+    if not os.environ.get('SUDO_USER'):
         logproc = pexpect.spawn(
             'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=3600)
     else:
@@ -393,7 +392,7 @@ def enter_container():
 
     podman_args = ['--env', 'LC_ALL=C.UTF-8']
     sudo = []
-    if os.environ.get('SUDO_USER') == None:
+    if not os.environ.get('SUDO_USER'):
         podman_args = ['--user', getpass.getuser()]
     else:
         sudo = ['sudo', '-u', os.environ.get(
@@ -402,7 +401,7 @@ def enter_container():
         if name not in ['LANG', 'LC_CTYPE', 'LC_ALL', 'PATH', 'HOST', 'HOSTNAME', 'SHELL'] and not name.startswith('_'):
             podman_args.append('--env')
             podman_args.append(name + '=' + val)
-    if os.environ.get('BLEND_COMMAND') == None or os.environ.get('BLEND_COMMAND') == '':
+    if not os.environ.get('BLEND_COMMAND'):
         if args.pkg == []:
             if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
                 exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args,

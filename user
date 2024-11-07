@@ -156,7 +156,7 @@ def associate_binary(association):
 
 @cli.command("create-container")
 @click.argument('container_name')
-@click.argument('distro', default='arch-linux')
+@click.argument('distro', required=False)
 def create_container(container_name, distro):
     '''
     Create a container

@@ -248,12 +248,12 @@ def core_run_container(cmd):
 
 
 def core_install_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro.startswith('fedora-'):
         if args.noconfirm == True:
             core_run_container(f'sudo dnf -y install {pkg}')
         else:
             core_run_container(f'sudo dnf install {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         if core_get_retcode('[ -f /usr/bin/yay ]') != 0:
             core_run_container('sudo pacman -Sy')
             core_run_container(
@@ -274,12 +274,12 @@ def core_install_pkg(pkg):
 
 
 def core_remove_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro.startswith('fedora-'):
         if args.noconfirm == True:
             core_run_container(f'sudo dnf -y remove {pkg}')
         else:
             core_run_container(f'sudo dnf remove {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         if args.noconfirm == True:
             core_run_container(f'sudo pacman --noconfirm -Rcns {pkg}')
         else:
@@ -293,9 +293,9 @@ def core_remove_pkg(pkg):
 
 
 def core_search_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro.startswith('fedora-'):
         core_run_container(f'dnf search {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         core_run_container(f'yay -Sy')
         core_run_container(f'yay {pkg}')
     elif args.distro.startswith('ubuntu-'):
@@ -304,9 +304,9 @@ def core_search_pkg(pkg):
 
 
 def core_show_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro.startswith('fedora-'):
         core_run_container(f'dnf info {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         core_run_container(f'yay -Sy')
         core_run_container(f'yay -Si {pkg}')
     elif args.distro.startswith('ubuntu-'):
@@ -358,21 +358,21 @@ def show_blend():
 
 
 def sync_blends():
-    if args.distro == 'fedora-rawhide':
+    if args.distro.startswith('fedora-'):
         core_run_container(f'dnf makecache')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         core_run_container(f'yay -Syy')
     elif args.distro.startswith('ubuntu-'):
         core_run_container(f'sudo apt-get update')
 
 
 def update_blends():
-    if args.distro == 'fedora-rawhide':
+    if args.distro.startswith('fedora-'):
         if args.noconfirm == True:
             core_run_container(f'sudo dnf -y upgrade')
         else:
             core_run_container(f'sudo dnf upgrade')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         if args.noconfirm == True:
             core_run_container(f'yay --noconfirm')
         else:

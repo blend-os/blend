@@ -138,7 +138,7 @@ def associate_binary(association, container):
 
 @cli.command("dissociate")
 @click.argument('association')
-def associate_binary(association):
+def dissociate_binary(association):
     '''
     Remove an association
     '''

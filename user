@@ -208,6 +208,7 @@ def exec_c(container, cmds):
         exit(1)
     creation_env = os.environ.copy()
     creation_env['BLEND_NO_CHECK'] = 'true'
+    cmds = [ cmd.replace('\\-', '-') for cmd in cmds]
     subprocess.run(['blend', 'enter', '-cn', container, '--', *cmds], env=creation_env)
 
 

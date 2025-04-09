@@ -162,7 +162,8 @@ def create_container(container_name, distro):
     Create a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
-        error(f'container {colors.bold}{container_name}{colors.reset} already exists')
+        error(
+            f'container {colors.bold}{container_name}{colors.reset} already exists')
         exit(1)
     args = ['blend', 'create-container', '-cn', container_name]
     # blend handles no distro being specified already
@@ -178,7 +179,8 @@ def delete_container(container):
     Delete a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
     subprocess.run(['blend', 'remove-container', container])
 
@@ -190,7 +192,8 @@ def shell(container):
     Enter a shell inside a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
     creation_env = os.environ.copy()
     creation_env['BLEND_NO_CHECK'] = 'true'
@@ -205,12 +208,14 @@ def exec_c(container, cmds):
     Run a command inside a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
     creation_env = os.environ.copy()
     creation_env['BLEND_NO_CHECK'] = 'true'
-    cmds = [ cmd.replace('\\-', '-') for cmd in cmds]
-    subprocess.run(['blend', 'enter', '-cn', container, '--', *cmds], env=creation_env)
+    cmds = [cmd.replace('\\-', '-') for cmd in cmds]
+    subprocess.run(['blend', 'enter', '-cn', container,
+                   '--', *cmds], env=creation_env)
 
 
 @cli.command("install")
@@ -228,7 +233,8 @@ def install_c(container, pkgs):
     elif os.path.isfile(os.path.expanduser(f'~/.local/bin/blend_bin/pacman.{container}')):
         subprocess.run([f'sudo.{container}', 'pacman', '-Syu', *pkgs])
     else:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
 
 
@@ -246,7 +252,8 @@ def remove_c(container, pkgs):
     elif os.path.isfile(os.path.expanduser(f'~/.local/bin/blend_bin/pacman.{container}')):
         subprocess.run([f'sudo.{container}', 'pacman', '-Rcns', *pkgs])
     else:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
 
 

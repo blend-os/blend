@@ -19,7 +19,7 @@
 
 import os
 import sys
-import glob
+from sys import stdout
 import time
 import shutil
 import socket
@@ -238,14 +238,22 @@ def host_get_output(cmd): return subprocess.run(['bash', '-c', cmd],
                                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode('UTF-8').strip()
 
 
-def core_get_retcode(cmd): return subprocess.run(['podman', 'exec', '--user', getpass.getuser(), '-it', args.container_name, 'bash', '-c', cmd],
-                                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+def core_get_retcode(cmd):
+    # only use `-it` if stdout is a tty
+    cmd = ['podman', 'exec', '--user', getpass.getuser(), '-it',
+           args.container_name, 'bash', '-c', cmd]
+    cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
 
 
 def core_run_container(cmd):
     if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
-        subprocess.call(['podman', 'exec', '--user', getpass.getuser(),
-                        '-w', os.getcwd(), '-it', args.container_name, 'bash', '-c', cmd])
+        # only use `-it` if stdout is a tty
+        cmd = ['podman', 'exec', '--user', getpass.getuser(),
+               '-w', os.getcwd(), '-it', args.container_name, 'bash', '-c', cmd]
+        cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+
+        subprocess.call(cmd)
 
 
 def core_install_pkg(pkg):
@@ -424,25 +432,46 @@ def enter_container():
     if not os.environ.get('BLEND_COMMAND'):
         if args.pkg == []:
             if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
-                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args,
-                     '-w', os.getcwd(), '-it', args.container_name, 'bash']))
+                # only use `-it` if stdout is a tty
+                cmd = [*sudo, 'podman', 'exec', *podman_args,
+                       '-w', os.getcwd(), '-it', args.container_name, 'bash']
+                cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+                exit(subprocess.call(cmd))
+
             else:
-                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w',
-                     '/run/host' + os.getcwd(), '-it', args.container_name, 'bash']))
+                # only use `-it` if stdout is a tty
+                cmd = [*sudo, 'podman', 'exec', *podman_args, '-w',
+                       '/run/host' + os.getcwd(), '-it', args.container_name, 'bash']
+                cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+                exit(subprocess.call(cmd))
         else:
             if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
-                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args,
-                     '-w', os.getcwd(), '-it', args.container_name, *args.pkg]))
+                # only use `-it` if stdout is a tty
+                cmd = [*sudo, 'podman', 'exec', *podman_args,
+                       '-w', os.getcwd(), '-it', args.container_name, *args.pkg]
+                cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+                exit(subprocess.call(cmd))
             else:
-                exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w',
-                     '/run/host' + os.getcwd(), '-it', args.container_name, *args.pkg]))
+                # only use `-it` if stdout is a tty
+                cmd = [*sudo, 'podman', 'exec', *podman_args, '-w',
+                       '/run/host' + os.getcwd(), '-it', args.container_name, *args.pkg]
+                cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+                exit(subprocess.call(cmd))
+
     else:
         if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
-            exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w', os.getcwd(
-            ), '-it', args.container_name, 'bash', '-c', os.environ.get('BLEND_COMMAND')]))
+            # only use `-it` if stdout is a tty
+            cmd = [*sudo, 'podman', 'exec', *podman_args, '-w', os.getcwd(), '-it',
+                   args.container_name, 'bash', '-c', os.environ.get('BLEND_COMMAND')]
+            cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+            exit(subprocess.call(cmd))
+
         else:
-            exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args, '-w',
-                 '/run/host' + os.getcwd(), '-it', args.container_name, 'bash']))
+            # only use `-it` if stdout is a tty
+            cmd = [*sudo, 'podman', 'exec', *podman_args, '-w',
+                   '/run/host' + os.getcwd(), '-it', args.container_name, 'bash']
+            cmd = [x for x in cmd if x != '-it' or stdout.isatty()]
+            exit(subprocess.call(cmd))
 
 
 def create_container():

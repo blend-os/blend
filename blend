@@ -129,7 +129,7 @@ def check_container(name):
 
 
 def check_container_status(name):
-    if os.environ.get('SUDO_USER'):
+    if not os.environ.get('SUDO_USER'):
         return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
     else:
         return host_get_output(f"sudo -u {os.environ.get('SUDO_USER')} podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
@@ -143,6 +143,7 @@ def core_start_container(name, new_container=False):
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     start_time = time.time() - 1000  # workaround
+    time.sleep(1)
     if check_container_status(name) != 'running':
         print('')
         error('the entry point failed to run; try again later')

@@ -18,7 +18,7 @@
         Containers</button>
       <button class="btn btn-outline-light shadow-none d-none" id="android-button" onclick="page('android')">Android
         Apps</button>
-      <button class="btn btn-outline-light shadow-none" id="system-button" onclick="page('system')">System Updates</button>
+      <button class="btn btn-outline-light shadow-none d-none" id="system-button" onclick="page('system')">System Updates</button>
     </div>
   </div>
 
@@ -43,6 +43,14 @@
 
     if (fs.existsSync('/usr/bin/waydroid')) {
       document.getElementById('android-button').classList.remove('d-none')
+    } else {
+   	  document.getElementById('android-button').remove()
+    }
+
+    if (fs.existsSync('/usr/bin/akshara')) {
+      document.getElementById('system-button').classList.remove('d-none')
+    } else {
+   	  document.getElementById('system-button').remove()
     }
 
     function page(page) {

@@ -87,9 +87,9 @@ def error(err):
 
 
 distro_map = {
-    'arch-linux': 'docker.io/library/archlinux',
+    'arch-linux': 'quay.io/toolbx/arch-toolbox:latest',
     'debian': 'quay.io/toolbx-images/debian-toolbox:testing',
-    'fedora-39': 'registry.fedoraproject.org/fedora-toolbox:39',
+    'fedora-42': 'quay.io/fedora/fedora-toolbox:42',
     'centos': 'quay.io/toolbx-images/centos-toolbox:latest',
     'ubuntu-22.04': 'quay.io/toolbx/ubuntu-toolbox:22.04',
     'ubuntu-24.04': 'quay.io/toolbx/ubuntu-toolbox:24.04',

@@ -156,18 +156,20 @@ def associate_binary(association):
 
 @cli.command("create-container")
 @click.argument('container_name')
-@click.argument('distro', default='arch')
+@click.argument('distro', required=False)
 def create_container(container_name, distro):
     '''
     Create a container
     '''
-    if distro not in ('arch', 'almalinux-9', 'crystal-linux', 'debian', 'fedora-38', 'kali-linux', 'neurodebian-bookworm', 'rocky-linux', 'ubuntu-22.04', 'ubuntu-23.04'):
-        error(
-            f'distro {colors.bold}{distro}{colors.reset} not supported')
     if subprocess.run(['podman', 'container', 'exists', container_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
-        error(f'container {colors.bold}{container_name}{colors.reset} already exists')
+        error(
+            f'container {colors.bold}{container_name}{colors.reset} already exists')
         exit(1)
-    subprocess.run(['blend', 'create-container', '-cn', container_name, '-d', distro])
+    args = ['blend', 'create-container', '-cn', container_name]
+    # blend handles no distro being specified already
+    if distro:
+        args.extend(['-d', distro])
+    exit(subprocess.run(args).returncode)
 
 
 @cli.command("delete-container")
@@ -177,7 +179,8 @@ def delete_container(container):
     Delete a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
     subprocess.run(['blend', 'remove-container', container])
 
@@ -189,7 +192,8 @@ def shell(container):
     Enter a shell inside a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
     creation_env = os.environ.copy()
     creation_env['BLEND_NO_CHECK'] = 'true'
@@ -204,11 +208,14 @@ def exec_c(container, cmds):
     Run a command inside a container
     '''
     if subprocess.run(['podman', 'container', 'exists', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
     creation_env = os.environ.copy()
     creation_env['BLEND_NO_CHECK'] = 'true'
-    subprocess.run(['blend', 'enter', '-cn', container, '--', *cmds], env=creation_env)
+    cmds = [cmd.replace('\\-', '-') for cmd in cmds]
+    subprocess.run(['blend', 'enter', '-cn', container,
+                   '--', *cmds], env=creation_env)
 
 
 @cli.command("install")
@@ -226,7 +233,8 @@ def install_c(container, pkgs):
     elif os.path.isfile(os.path.expanduser(f'~/.local/bin/blend_bin/pacman.{container}')):
         subprocess.run([f'sudo.{container}', 'pacman', '-Syu', *pkgs])
     else:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
 
 
@@ -244,7 +252,8 @@ def remove_c(container, pkgs):
     elif os.path.isfile(os.path.expanduser(f'~/.local/bin/blend_bin/pacman.{container}')):
         subprocess.run([f'sudo.{container}', 'pacman', '-Rcns', *pkgs])
     else:
-        error(f'container {colors.bold}{container}{colors.reset} does not exist')
+        error(
+            f'container {colors.bold}{container}{colors.reset} does not exist')
         exit(1)
 
 

@@ -160,10 +160,15 @@ function loadTerminalWindow(title, cmd) {
     if (!terminalWindow.isDestroyed()) {
       terminalWindow.webContents.send("terminal.reset")
       terminalWindow.hide()
-      if (title.startsWith('Creating container: ')) {
-        mainWindow.webContents.send("container-created")
-      } else if (title.startsWith('Package installation')) {
-        packageWindow.webContents.send("installation-complete")
+      try {
+        if (title.startsWith('Creating container: ')) {
+          mainWindow.webContents.send("container-created")
+        } else if (title.startsWith('Package installation')) {
+          packageWindow.webContents.send("installation-complete")
+        }
+      } catch (err) {
+        console.log(err)
+        app.quit()
       }
     }
   })
@@ -178,10 +183,8 @@ function loadTerminalWindow(title, cmd) {
 app.whenReady().then(() => {
   app.allowRendererProcessReuse = false
 
-  if (process.argv.length > 2) {
-    if (process.argv[2] == 'package') {
-      createPackageWindow()
-    }
+  if (process.argv.includes('package')) {
+    createPackageWindow()
   } else {
     createWindow()
   }

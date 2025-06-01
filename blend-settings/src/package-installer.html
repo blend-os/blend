@@ -88,7 +88,7 @@
     <script>
         const ipc = require('electron').ipcRenderer
 
-        package_name = require('path').basename(require('@electron/remote').process.argv[3])
+        package_name = require('path').basename(require('@electron/remote').process.argv.slice(-1)[0])
         package_type = 'deb'
 
         if (package_name.endsWith('.deb')) {
@@ -98,12 +98,13 @@
             document.getElementById('source_select').innerHTML = `
                 <option>Debian</option>
                 <option>Ubuntu 22.04</option>
+                <option>Ubuntu 24.04</option>
             `
         } else if (package_name.endsWith('.rpm')) {
             document.getElementById('packaging-format').src = '../static/RPM.svg'
             package_type = 'rpm'
             document.getElementById('source_select').innerHTML = `
-                <option>Fedora 39</option>
+                <option>Fedora 42</option>
                 <option>CentOS</option>
             `
         } else if (package_name.endsWith('.apk')) {
@@ -127,7 +128,7 @@
         function install_package() {
             if (package_type == 'apk') {
                 document.getElementById('install-button').disabled = true
-                require('child_process').spawnSync('waydroid', ['app', 'install', require('@electron/remote').process.argv[3]])
+                require('child_process').spawnSync('waydroid', ['app', 'install', require('@electron/remote').process.argv.slice(-1)[0]])
                 document.getElementById('install-button').innerHTML = 'Installed'
                 require('child_process').spawnSync('rm', ['-rf', install_dir])
             } else {
@@ -135,7 +136,7 @@
                 timestamp = Math.floor(new Date().getTime() / 1000)
                 install_dir = `${require('os').homedir()}/.cache/package-installer/${timestamp}`
                 require('child_process').spawnSync('mkdir', ['-p', install_dir])
-                require('child_process').spawnSync('cp', [require('@electron/remote').process.argv[3], install_dir])
+                require('child_process').spawnSync('cp', [require('@electron/remote').process.argv.slice(-1)[0], install_dir])
                 install_command = ''
                 if (package_type == 'deb') {
                     install_command = `apt install -y ${install_dir}/${package_name}`

@@ -87,11 +87,12 @@ def error(err):
 
 
 distro_map = {
-    'arch-linux': 'docker.io/library/archlinux',
+    'arch-linux': 'quay.io/toolbx/arch-toolbox:latest',
     'debian': 'quay.io/toolbx-images/debian-toolbox:testing',
-    'fedora-39': 'registry.fedoraproject.org/fedora-toolbox:39',
+    'fedora-42': 'quay.io/fedora/fedora-toolbox:42',
     'centos': 'quay.io/toolbx-images/centos-toolbox:latest',
     'ubuntu-22.04': 'quay.io/toolbx/ubuntu-toolbox:22.04',
+    'ubuntu-24.04': 'quay.io/toolbx/ubuntu-toolbox:24.04',
 }
 
 default_distro = 'arch-linux'
@@ -128,7 +129,7 @@ def check_container(name):
 
 
 def check_container_status(name):
-    if os.environ.get('SUDO_USER') == None:
+    if not os.environ.get('SUDO_USER'):
         return host_get_output("podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
     else:
         return host_get_output(f"sudo -u {os.environ.get('SUDO_USER')} podman inspect --type container " + name + " --format \"{{.State.Status}}\"")
@@ -136,12 +137,13 @@ def check_container_status(name):
 
 def core_start_container(name, new_container=False):
     sudo = []
-    if os.environ.get('SUDO_USER') != None:
+    if os.environ.get('SUDO_USER'):
         sudo = ['sudo', '-u', os.environ.get('SUDO_USER')]
     subprocess.call([*sudo, 'podman', 'start', name],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     start_time = time.time() - 1000  # workaround
+    time.sleep(1)
     if check_container_status(name) != 'running':
         print('')
         error('the entry point failed to run; try again later')
@@ -149,7 +151,7 @@ def core_start_container(name, new_container=False):
         subprocess.call(['podman', 'logs', '--since', str(start_time), name])
         exit(1)
 
-    if os.environ.get('SUDO_USER') == None:
+    if not os.environ.get('SUDO_USER'):
         logproc = pexpect.spawn(
             'podman', args=['logs', '-f', '--since', str(start_time), name], timeout=3600)
     else:
@@ -167,8 +169,8 @@ def core_create_container():
     info(f'creating container {name}, using {distro}')
 
     if check_container(name):
-       error(f'container {name} already exists')
-       exit(1)
+        error(f'container {name} already exists')
+        exit(1)
 
     podman_command = []
 
@@ -247,12 +249,15 @@ def core_run_container(cmd):
 
 
 def core_install_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro == 'arch':
+        args.distro = 'arch-linux'
+
+    if args.distro.startswith('fedora-'):
         if args.noconfirm == True:
             core_run_container(f'sudo dnf -y install {pkg}')
         else:
             core_run_container(f'sudo dnf install {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         if core_get_retcode('[ -f /usr/bin/yay ]') != 0:
             core_run_container('sudo pacman -Sy')
             core_run_container(
@@ -273,12 +278,15 @@ def core_install_pkg(pkg):
 
 
 def core_remove_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro == 'arch':
+        args.distro = 'arch-linux'
+
+    if args.distro.startswith('fedora-'):
         if args.noconfirm == True:
             core_run_container(f'sudo dnf -y remove {pkg}')
         else:
             core_run_container(f'sudo dnf remove {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         if args.noconfirm == True:
             core_run_container(f'sudo pacman --noconfirm -Rcns {pkg}')
         else:
@@ -292,9 +300,12 @@ def core_remove_pkg(pkg):
 
 
 def core_search_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro == 'arch':
+        args.distro = 'arch-linux'
+
+    if args.distro.startswith('fedora-'):
         core_run_container(f'dnf search {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         core_run_container(f'yay -Sy')
         core_run_container(f'yay {pkg}')
     elif args.distro.startswith('ubuntu-'):
@@ -303,9 +314,12 @@ def core_search_pkg(pkg):
 
 
 def core_show_pkg(pkg):
-    if args.distro == 'fedora-rawhide':
+    if args.distro == 'arch':
+        args.distro = 'arch-linux'
+
+    if args.distro.startswith('fedora-'):
         core_run_container(f'dnf info {pkg}')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         core_run_container(f'yay -Sy')
         core_run_container(f'yay -Si {pkg}')
     elif args.distro.startswith('ubuntu-'):
@@ -357,21 +371,27 @@ def show_blend():
 
 
 def sync_blends():
-    if args.distro == 'fedora-rawhide':
+    if args.distro == 'arch':
+        args.distro = 'arch-linux'
+
+    if args.distro.startswith('fedora-'):
         core_run_container(f'dnf makecache')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         core_run_container(f'yay -Syy')
     elif args.distro.startswith('ubuntu-'):
         core_run_container(f'sudo apt-get update')
 
 
 def update_blends():
-    if args.distro == 'fedora-rawhide':
+    if args.distro == 'arch':
+        args.distro = 'arch-linux'
+
+    if args.distro.startswith('fedora-'):
         if args.noconfirm == True:
             core_run_container(f'sudo dnf -y upgrade')
         else:
             core_run_container(f'sudo dnf upgrade')
-    elif args.distro == 'arch':
+    elif args.distro == 'arch-linux':
         if args.noconfirm == True:
             core_run_container(f'yay --noconfirm')
         else:
@@ -392,7 +412,7 @@ def enter_container():
 
     podman_args = ['--env', 'LC_ALL=C.UTF-8']
     sudo = []
-    if os.environ.get('SUDO_USER') == None:
+    if not os.environ.get('SUDO_USER'):
         podman_args = ['--user', getpass.getuser()]
     else:
         sudo = ['sudo', '-u', os.environ.get(
@@ -401,7 +421,7 @@ def enter_container():
         if name not in ['LANG', 'LC_CTYPE', 'LC_ALL', 'PATH', 'HOST', 'HOSTNAME', 'SHELL'] and not name.startswith('_'):
             podman_args.append('--env')
             podman_args.append(name + '=' + val)
-    if os.environ.get('BLEND_COMMAND') == None or os.environ.get('BLEND_COMMAND') == '':
+    if not os.environ.get('BLEND_COMMAND'):
         if args.pkg == []:
             if os.getcwd() == os.path.expanduser('~') or os.getcwd().startswith(os.path.expanduser('~') + '/'):
                 exit(subprocess.call([*sudo, 'podman', 'exec', *podman_args,
@@ -427,6 +447,7 @@ def enter_container():
 
 def create_container():
     for container in args.pkg:
+        container = 'ubuntu-24.04' if container == 'ubuntu-24.04-lts' else container
         args.container_name = container
         if container in distro_map.keys() and distro_input == None:
             args.distro = container
@@ -442,10 +463,12 @@ def remove_container():
                        stdout=subprocess.DEVNULL)
         for bin in os.listdir(os.path.expanduser('~/.local/bin/blend_bin')):
             if bin.endswith(f'.{container}'):
-                os.remove(os.path.join(os.path.expanduser('~/.local/bin/blend_bin'), bin))
+                os.remove(os.path.join(os.path.expanduser(
+                    '~/.local/bin/blend_bin'), bin))
         for app in os.listdir(os.path.expanduser('~/.local/share/applications')):
             if app.startswith(f'blend;{container};'):
-                os.remove(os.path.join(os.path.expanduser('~/.local/share/applications'), app))
+                os.remove(os.path.join(os.path.expanduser(
+                    '~/.local/share/applications'), app))
 
 
 def start_containers():

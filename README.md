@@ -13,7 +13,7 @@ I would also like to thank Luca Di Maio from Distrobox for NVIDIA driver support
 
 `overlayfs-tools` has been taken from https://github.com/ecdye/zram-config, which itself forked https://github.com/kmxz/overlayfs-tools.
 
-Aside from these lines, all the other code in this repository has been written by me (rs2009). `blend-settings` is based on [Modren](https://github.com/RudraSwat/modren), a software store I (rs2009) had written long ago, and is licensed under the same license as the rest of the code in this repository, [the GPL-3.0 license](https://github.com/blend-os/blend/blob/main/LICENSE).
+Aside from these lines, all the other code in this repository has been written by me (rs2009). `blend-settings` is based on [Modren](https://github.com/RudraSwat/modren), a software store I (rs2009) had written long ago, and is licensed under the same license as the rest of the code in this repository, [the GPL-3.0 license](LICENSE.md).
 
 ## Usage
 

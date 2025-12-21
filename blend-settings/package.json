@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "A settings app for blendOS",
   "main": "main.js",
-  "homepage": "https://blendos.org",
+  "homepage": "https://blendos.co",
   "author": "Rudra Saraswat",
   "license": "GPL-3.0-or-later",
   "scripts": {

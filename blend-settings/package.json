@@ -32,7 +32,7 @@
   "build": {
     "appId": "org.blend.settings",
     "productName": "blendOS Settings",
-    "asar": true,
+    "asar": false,
     "linux": {
       "target": [
         "tar.gz"

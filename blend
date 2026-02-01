@@ -505,9 +505,7 @@ if os.geteuid() == 0 and os.environ['BLEND_ALLOW_ROOT'] == None:
 description = f'''
 {colors.bold}{colors.fg.purple}Version:{colors.reset} {__version}{colors.bold}
 
-Use the 'blendOS Settings' app to create and manage Linux containers, Android apps and for system configuration.
-
-You can install and submit web apps from the Web Store.
+Use the 'Containers' app to create and manage Linux containers.
 '''
 
 epilog = f'''
